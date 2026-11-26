@@ -1,6 +1,6 @@
 {
   "name": "@market-chart/indicators",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Incremental technical indicator engine and chart integration for @market-chart/core.",
   "license": "MIT",
   "repository": {

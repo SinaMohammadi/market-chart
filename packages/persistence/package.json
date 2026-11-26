@@ -1,6 +1,6 @@
 {
   "name": "@market-chart/persistence",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Chart and workspace persistence: storage adapters (memory, Web Storage, IndexedDB, REST), versioned schemas, migrations, autosave, conflict handling, cross-tab sync, import/export.",
   "license": "MIT",
   "repository": {

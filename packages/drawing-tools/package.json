@@ -1,6 +1,6 @@
 {
   "name": "@market-chart/drawing-tools",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Drawing tools (trend lines, Fibonacci, Gann, pitchforks, positions…) with selection, undo/redo and persistence for @market-chart/core.",
   "license": "MIT",
   "repository": {

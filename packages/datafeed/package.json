@@ -1,6 +1,6 @@
 {
   "name": "@market-chart/datafeed",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Datafeed contract, adapters (static, CSV/JSON, REST, WebSocket, SSE) and chart binding with realtime updates and history pagination.",
   "license": "MIT",
   "repository": {

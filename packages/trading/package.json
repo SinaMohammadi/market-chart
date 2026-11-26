@@ -1,6 +1,6 @@
 {
   "name": "@market-chart/trading",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The application's orders, positions, alerts and custom markers drawn at their prices on a @market-chart chart, with drag-to-modify, cancel, context menus and an object-tree section. Display only: it never trades.",
   "license": "MIT",
   "repository": {

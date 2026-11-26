@@ -1,6 +1,6 @@
 {
   "name": "@market-chart/i18n",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Typed translations, locales with text direction, pluralisation, interpolation and locale-aware number/date formatting for market-chart UIs. English, Persian and Arabic built in.",
   "license": "MIT",
   "repository": {
