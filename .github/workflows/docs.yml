@@ -1,6 +1,4 @@
-# Builds the documentation site (apps/docs) and publishes it to GitHub Pages:
-# https://sinamohammadi.github.io/market-chart/
-# One-time setup: repository Settings → Pages → Source: "GitHub Actions".
+
 name: Docs
 
 on:
@@ -13,7 +11,6 @@ permissions:
   pages: write
   id-token: write
 
-# One deployment at a time; a newer push waits instead of cancelling a deployment in progress.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -21,28 +18,43 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      # Uses the pnpm version from "packageManager" in package.json.
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      # The docs consume the packages from source, so no package build is needed.
-      - run: pnpm docs:build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build documentation
+        run: pnpm docs:build
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
         with:
           path: apps/docs/dist
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
