@@ -16,6 +16,13 @@ const LINKS: Readonly<Record<string, string>> = {
   'PERFORMANCE.md': '/guides/performance',
   'docs/ARCHITECTURE.md': '/guides/architecture',
   'ARCHITECTURE.md': '/guides/architecture',
+  'docs/ADVANCED.md': '/guides/advanced',
+  'ADVANCED.md': '/guides/advanced',
+  'docs/PUBLISHING.md': '/guides/publishing',
+  'PUBLISHING.md': '/guides/publishing',
+  'docs/LEGAL.md': '/license',
+  'LEGAL.md': '/license',
+  'SECURITY.md': '/guides/security',
   'FEATURE_MATRIX.md': '/status',
   LICENSE: '/license',
 };
@@ -39,7 +46,7 @@ export function resolveLink(url: string): { url: string; external: boolean } {
     };
   const clean = url.replace(/^(\.\.\/)+|^\.\//, '').replace(/#.*$/, '');
   const pkg =
-    /(?:^|\/)?(?:packages\/)?(core|react|indicators|drawing-tools|charts|datafeed|persistence|testing|i18n|ui)(?:\/README\.md)?\/?$/.exec(
+    /(?:^|\/)?(?:packages\/)?(core|react|indicators|drawing-tools|charts|datafeed|persistence|testing|i18n|ui|trading)(?:\/README\.md)?\/?$/.exec(
       clean,
     );
   if (LINKS[clean]) return { url: href(LINKS[clean]!), external: false };

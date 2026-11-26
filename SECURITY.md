@@ -44,13 +44,13 @@ own code as **untrusted data** and validates it:
 
 Symbol selection, price actions and trading overlays (all optional):
 
-| Input | Where it enters | What the library does |
-|---|---|---|
-| Symbol lists and search results | `symbols.list()`, `symbols.search()` | `normalizeSymbolItem`: symbols 1–64 characters without control or bidi characters; texts cleaned and bounded; icons only `http(s)`/`data:image` URLs or registered icon names, loaded with `referrerpolicy="no-referrer"`; results capped at `limit`; stale responses aborted and ignored |
-| Favourite and recent symbols | stored preferences (version 3) | Validated on load; at most 200 favourites and 50 recent symbols |
+| Input                              | Where it enters                            | What the library does                                                                                                                                                                                                                                                                      |
+| ---------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Symbol lists and search results    | `symbols.list()`, `symbols.search()`       | `normalizeSymbolItem`: symbols 1–64 characters without control or bidi characters; texts cleaned and bounded; icons only `http(s)`/`data:image` URLs or registered icon names, loaded with `referrerpolicy="no-referrer"`; results capped at `limit`; stale responses aborted and ignored  |
+| Favourite and recent symbols       | stored preferences (version 3)             | Validated on load; at most 200 favourites and 50 recent symbols                                                                                                                                                                                                                            |
 | Orders, positions, alerts, markers | `createTradingOverlay` (`set…`, `upsert…`) | `normalizeOrder` and friends: string ids (≤ 128 characters), `buy`/`sell` sides, finite prices, non-negative quantities, known statuses; labels plain text without control or bidi characters (≤ 60 characters); colours only from a plain CSS allow-list; at most 10,000 objects per kind |
-| Order-ticket input and answers | the ticket fields, your `submit` result | Values validated against your field rules; numbers parsed strictly (Latin, Persian, Arabic digits); your messages and thrown errors shown as plain text (≤ 300 characters) |
-| Extension preferences | `UiPreferences.extensions` | Plain JSON per namespace, at most 16 KB each and 50 namespaces; each package validates its own namespace |
+| Order-ticket input and answers     | the ticket fields, your `submit` result    | Values validated against your field rules; numbers parsed strictly (Latin, Persian, Arabic digits); your messages and thrown errors shown as plain text (≤ 300 characters)                                                                                                                 |
+| Extension preferences              | `UiPreferences.extensions`                 | Plain JSON per namespace, at most 16 KB each and 50 namespaces; each package validates its own namespace                                                                                                                                                                                   |
 
 No part of the library uses `innerHTML`, `dangerouslySetInnerHTML`, `eval`, `new Function` or `document.write`.
 

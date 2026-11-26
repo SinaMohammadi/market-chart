@@ -51,7 +51,7 @@ apps/
   nextjs/         Next.js App Router example
 ```
 
-Packages marked *planned* are not created until work on them starts, so the repository never
+Packages marked _planned_ are not created until work on them starts, so the repository never
 contains empty placeholder packages that look finished.
 
 ### Dependency graph (allowed directions)
@@ -98,12 +98,12 @@ core/src/
 
 ### 3.1 Core data structures
 
-| Structure    | Purpose | Notes |
-|---|---|---|
-| `ColumnStore` | Series data | One `Float64Array` per field (`time`, `open`, `high`, `low`, `close`, `volume` or `time`, `value`). Capacity doubles, so realtime appends are amortised O(1) with no per-bar object allocation. |
-| `Timeline` | Shared X axis | Sorted, de-duplicated union of all series timestamps. Each series keeps a `localToGlobal: Int32Array` mapping into it. Appending a newer bar is O(1); out-of-order inserts trigger an O(n) merge. |
-| `TimeScale` | Logical index ↔ pixel | State is `barSpacing` + `rightOffset`. Logical index `i` is centred at `x = width − (lastIndex + rightOffset − i + 0.5) · barSpacing`. Missing candles do not create gaps (index-based axis, like most trading charts). |
-| `PriceScale` | Price ↔ pixel | Works in a transformed space (normal, log10, percentage, indexed-to-100), with margins, inversion, auto-scale and manual range. |
+| Structure     | Purpose               | Notes                                                                                                                                                                                                                   |
+| ------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ColumnStore` | Series data           | One `Float64Array` per field (`time`, `open`, `high`, `low`, `close`, `volume` or `time`, `value`). Capacity doubles, so realtime appends are amortised O(1) with no per-bar object allocation.                         |
+| `Timeline`    | Shared X axis         | Sorted, de-duplicated union of all series timestamps. Each series keeps a `localToGlobal: Int32Array` mapping into it. Appending a newer bar is O(1); out-of-order inserts trigger an O(n) merge.                       |
+| `TimeScale`   | Logical index ↔ pixel | State is `barSpacing` + `rightOffset`. Logical index `i` is centred at `x = width − (lastIndex + rightOffset − i + 0.5) · barSpacing`. Missing candles do not create gaps (index-based axis, like most trading charts). |
+| `PriceScale`  | Price ↔ pixel         | Works in a transformed space (normal, log10, percentage, indexed-to-100), with margins, inversion, auto-scale and manual range.                                                                                         |
 
 Time values are **UTC milliseconds since epoch** (same unit as `Date.now()`), which avoids
 conversions when consuming exchange APIs.
@@ -138,20 +138,20 @@ invalidate(m) →│ layout?  → autoscale → ticks → measure axis → (re)l
 
 A single `InteractionController` attaches listeners **once** to the overlay surface:
 
-| Input | Region | Effect |
-|---|---|---|
-| drag | pane | pan time; pan price scales that are not auto-scaled; optional kinetic fling on release |
-| drag | left / right price axis | scale that axis (turns its auto-scale off) |
-| drag | time axis | change bar spacing anchored at the right edge |
-| drag | pane separator | resize the two neighbouring panes |
-| wheel | pane | zoom around cursor; horizontal wheel / shift-wheel pans |
-| wheel | price axis | scale that axis |
-| pinch | pane | zoom around the gesture midpoint |
-| long-press (touch) | pane | crosshair that follows the finger; next tap hides it |
-| dbl-click | price axis | re-enable auto-scale |
-| dbl-click | time axis | reset bar spacing and scroll to latest bar |
-| move | pane | crosshair (normal or magnet-to-close) |
-| keys (focused) | chart | ←/→ scroll (Shift: 10 bars), ↑/↓/+/− zoom, Home/End, Esc hides crosshair |
+| Input              | Region                  | Effect                                                                                 |
+| ------------------ | ----------------------- | -------------------------------------------------------------------------------------- |
+| drag               | pane                    | pan time; pan price scales that are not auto-scaled; optional kinetic fling on release |
+| drag               | left / right price axis | scale that axis (turns its auto-scale off)                                             |
+| drag               | time axis               | change bar spacing anchored at the right edge                                          |
+| drag               | pane separator          | resize the two neighbouring panes                                                      |
+| wheel              | pane                    | zoom around cursor; horizontal wheel / shift-wheel pans                                |
+| wheel              | price axis              | scale that axis                                                                        |
+| pinch              | pane                    | zoom around the gesture midpoint                                                       |
+| long-press (touch) | pane                    | crosshair that follows the finger; next tap hides it                                   |
+| dbl-click          | price axis              | re-enable auto-scale                                                                   |
+| dbl-click          | time axis               | reset bar spacing and scroll to latest bar                                             |
+| move               | pane                    | crosshair (normal or magnet-to-close)                                                  |
+| keys (focused)     | chart                   | ←/→ scroll (Shift: 10 bars), ↑/↓/+/− zoom, Home/End, Esc hides crosshair               |
 
 Timers and animation frames are injected (`InteractionEnvironment`), so gestures such as long-press and kinetic
 scrolling are unit-tested deterministically in Node.
@@ -207,7 +207,7 @@ Options are **plain JSON** (serialisable). Functions (custom formatters) live in
 interface ChartPlugin {
   id: string;
   version: string;
-  dependencies?: readonly string[];      // plugin ids that must be installed first
+  dependencies?: readonly string[]; // plugin ids that must be installed first
   install(context: ChartPluginContext): void;
   destroy?(): void;
 }
@@ -224,12 +224,12 @@ context menus) are added to the context, not by exposing internals.
 
 ## 6. SSR boundaries
 
-| Entry | Browser globals | Purpose |
-|---|---|---|
-| `@market-chart/core` | only inside `createChart()` and later calls | interactive engine |
-| `@market-chart/core/static` | none | pure geometry (paths, candle rects, ranges) |
-| `@market-chart/react` | only inside effects; file carries `"use client"` | interactive React chart |
-| `@market-chart/react/ssr` | none, imports only `core/static` | `<StaticChart>` server-rendered SVG |
+| Entry                       | Browser globals                                  | Purpose                                     |
+| --------------------------- | ------------------------------------------------ | ------------------------------------------- |
+| `@market-chart/core`        | only inside `createChart()` and later calls      | interactive engine                          |
+| `@market-chart/core/static` | none                                             | pure geometry (paths, candle rects, ranges) |
+| `@market-chart/react`       | only inside effects; file carries `"use client"` | interactive React chart                     |
+| `@market-chart/react/ssr`   | none, imports only `core/static`                 | `<StaticChart>` server-rendered SVG         |
 
 `StaticChart` uses a fixed `viewBox` and `preserveAspectRatio="none"` with
 `vector-effect="non-scaling-stroke"`, so markup is deterministic and identical on server and client:
@@ -276,7 +276,7 @@ definition (schema + outputs + create)  ──►  IndicatorRunner  ──►  I
 
 ## 9. Advanced features
 
-- **Custom series** (`chart.addCustomSeries(view)`): the core stores an OHLC or value *envelope* (time axis,
+- **Custom series** (`chart.addCustomSeries(view)`): the core stores an OHLC or value _envelope_ (time axis,
   auto-scale, crosshair, last value) and calls `view.paint` with bitmap coordinates for the visible range.
   Richer data such as footprint levels or order books stays in the view, keyed by time.
 - **Sync** (`createChartSync`): crosshair via `setCrosshairPosition` (pointer events only), visible range mapped
@@ -312,8 +312,8 @@ visibleRangeChange near start ─► getHistoricalData(older page) ─► merge,
 
 ```ts
 interface StorageAdapter<T extends { revision: number }> {
-  save(id: string, state: T): Promise<void>;     // rejects with StorageConflictError unless state.revision is newer
-  load(id: string): Promise<T | null>;           // validated (and migrated) on read
+  save(id: string, state: T): Promise<void>; // rejects with StorageConflictError unless state.revision is newer
+  load(id: string): Promise<T | null>; // validated (and migrated) on read
   delete(id: string): Promise<void>;
   list(): Promise<ChartLayoutMetadata[]>;
 }
@@ -452,7 +452,7 @@ without them contains none of their code (checked by bundling a minimal app agai
   rounded with core `roundToTick`, formatted, side vs. last price, symbol) is resolved from the context-menu
   target, the crosshair (`+` button, shortcuts) or code. `{price}` in labels is filled automatically.
 - **OrderTicket**: fields declared by the application, validation, `idle → confirming → submitting →
-  accepted | rejected`, a pending-promise guard against double submission, no retries.
+accepted | rejected`, a pending-promise guard against double submission, no retries.
 
 Preferences moved to version 3 (`symbols`, `trade`, `extensions`); `extensions` is per-package JSON validated by
 its owner and bounded in size.
@@ -489,31 +489,31 @@ API; no engine behaviour changed.
 
 ## 14. Technical decisions
 
-| Decision | Choice | Why |
-|---|---|---|
-| Rendering baseline | Canvas 2D | Universally available, fast for ≤ a few thousand visible bars, simple text. GPU only after benchmarks. |
-| Time unit | UTC ms | Matches `Date.now()` and most exchange APIs. |
-| X axis | logical index | No weekend/overnight gaps, O(1) index→x. |
-| Storage | typed-array columns | No per-bar objects, cache-friendly, cheap realtime appends. |
-| Imports | explicit `.js` extensions | Works unchanged in tsc ESM output, Node, Vite, tsup. |
-| Bundler | tsup (ESM + CJS + d.ts) | Simple multi-entry builds, `"use client"` banner for React entry. |
-| Tests | Vitest + RTL + Playwright | Unit/integration/visual. |
-| Runtime deps | none in core | Tree-shakeable, `sideEffects: false`. |
+| Decision           | Choice                    | Why                                                                                                    |
+| ------------------ | ------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Rendering baseline | Canvas 2D                 | Universally available, fast for ≤ a few thousand visible bars, simple text. GPU only after benchmarks. |
+| Time unit          | UTC ms                    | Matches `Date.now()` and most exchange APIs.                                                           |
+| X axis             | logical index             | No weekend/overnight gaps, O(1) index→x.                                                               |
+| Storage            | typed-array columns       | No per-bar objects, cache-friendly, cheap realtime appends.                                            |
+| Imports            | explicit `.js` extensions | Works unchanged in tsc ESM output, Node, Vite, tsup.                                                   |
+| Bundler            | tsup (ESM + CJS + d.ts)   | Simple multi-entry builds, `"use client"` banner for React entry.                                      |
+| Tests              | Vitest + RTL + Playwright | Unit/integration/visual.                                                                               |
+| Runtime deps       | none in core              | Tree-shakeable, `sideEffects: false`.                                                                  |
 
 ---
 
 ## 15. Roadmap
 
-| Milestone | Scope | Status |
-|---|---|---|
-| Foundation | monorepo, core model, Canvas renderer, time/price scales, candlestick/bar/line/area/histogram, pan/zoom/crosshair, React bindings, static SSR chart | done |
-| Professional engine | left scales, label collision, per-series formatters, pane resize, kinetic scroll, keyboard, touch crosshair, crosshair API | done |
-| Indicators | engine, incremental calculation, 44 standard indicators, chart manager, React bindings, serialisation | done |
-| Drawing tools | input handlers, drawing manager, 35 tools, selection, magnet, undo/redo, clipboard, persistence | done |
-| Advanced features | custom series, sync, layouts, advanced chart types, volume/market profile, order flow, heatmap, plugin versions | done |
-| Data and persistence | datafeed contract and adapters, chart binding with pagination, storage adapters, schemas and migrations, autosave, conflicts, cross-tab sync, workspaces, import/export | done |
-| SSR and performance | import-safety and hydration tests, ProgressiveChart, Next.js App Router example, benchmarks (100K/500K/1M), memory profiling, columnar data paths | done |
-| Interface and languages | i18n package (en, fa, ar, custom languages, plurals, RTL, locale formatting), chart locale/direction API, context-menu event and target-aware menus, unified action registry, configurable header and sidebar, settings UI, persisted preferences, legend, documentation site | done |
-| Security review | findings SEC-01 to SEC-43, `SECURITY.md`, shared network and text helpers | done |
-| Symbols and trading interface | optional symbol selection (dropdown, search dialog, custom), price actions, order ticket, `@market-chart/trading` (orders, positions, alerts, markers) | done |
-| Release automation | CI running tests, build and benchmarks; changesets release workflow with npm provenance; visual regression tests (Playwright) | planned |
+| Milestone                     | Scope                                                                                                                                                                                                                                                                         | Status  |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| Foundation                    | monorepo, core model, Canvas renderer, time/price scales, candlestick/bar/line/area/histogram, pan/zoom/crosshair, React bindings, static SSR chart                                                                                                                           | done    |
+| Professional engine           | left scales, label collision, per-series formatters, pane resize, kinetic scroll, keyboard, touch crosshair, crosshair API                                                                                                                                                    | done    |
+| Indicators                    | engine, incremental calculation, 44 standard indicators, chart manager, React bindings, serialisation                                                                                                                                                                         | done    |
+| Drawing tools                 | input handlers, drawing manager, 35 tools, selection, magnet, undo/redo, clipboard, persistence                                                                                                                                                                               | done    |
+| Advanced features             | custom series, sync, layouts, advanced chart types, volume/market profile, order flow, heatmap, plugin versions                                                                                                                                                               | done    |
+| Data and persistence          | datafeed contract and adapters, chart binding with pagination, storage adapters, schemas and migrations, autosave, conflicts, cross-tab sync, workspaces, import/export                                                                                                       | done    |
+| SSR and performance           | import-safety and hydration tests, ProgressiveChart, Next.js App Router example, benchmarks (100K/500K/1M), memory profiling, columnar data paths                                                                                                                             | done    |
+| Interface and languages       | i18n package (en, fa, ar, custom languages, plurals, RTL, locale formatting), chart locale/direction API, context-menu event and target-aware menus, unified action registry, configurable header and sidebar, settings UI, persisted preferences, legend, documentation site | done    |
+| Security review               | findings SEC-01 to SEC-43, `SECURITY.md`, shared network and text helpers                                                                                                                                                                                                     | done    |
+| Symbols and trading interface | optional symbol selection (dropdown, search dialog, custom), price actions, order ticket, `@market-chart/trading` (orders, positions, alerts, markers)                                                                                                                        | done    |
+| Release automation            | CI running tests, build and benchmarks; changesets release workflow with npm provenance; visual regression tests (Playwright)                                                                                                                                                 | planned |

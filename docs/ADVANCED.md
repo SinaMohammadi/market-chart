@@ -43,7 +43,7 @@ Rules that follow from it:
   `chart.render()` forces a synchronous frame (tests, screenshots).
 - **Pointer movement repaints only the overlay surface.** Keep anything that follows the pointer on a `top`
   layer and call `requestRedraw('overlay')`; never redraw series for hover effects.
-- **Coordinates.** Data is UTC milliseconds and prices. The time axis is a *logical index* (bar `i` is centred at
+- **Coordinates.** Data is UTC milliseconds and prices. The time axis is a _logical index_ (bar `i` is centred at
   logical `i`), so gaps (weekends, nights) take no space. Layer drawing uses **bitmap pixels**
   (`cssPx × pixelRatio`); hit-testing and events use **CSS pixels**.
 - **React never renders bars.** Components push data into the engine; a realtime tick is an engine call, not a
@@ -180,7 +180,8 @@ import type { Datafeed } from '@market-chart/datafeed';
 
 const feed: Datafeed = {
   resolveSymbol: async (symbol) => api.symbolInfo(symbol),
-  getHistoricalData: async (symbol, interval, range) => api.candles(symbol, interval, range.from, range.to),
+  getHistoricalData: async (symbol, interval, range) =>
+    api.candles(symbol, interval, range.from, range.to),
   subscribe(symbol, interval, onCandle) {
     const socket = api.stream(symbol, interval, onCandle);
     return () => socket.close();
@@ -212,7 +213,7 @@ import type { StateProvider } from '@market-chart/persistence';
 const watchlist: StateProvider = {
   capture: () => ({ symbols: store.symbols() }),
   restore: (data) => store.setSymbols(validateWatchlist(data)), // validate: stored data is untrusted
-  subscribe: (onChange) => store.on('change', onChange),       // triggers debounced autosave
+  subscribe: (onChange) => store.on('change', onChange), // triggers debounced autosave
 };
 
 new ChartPersistence({ chart, storage, id: 'main', providers: { watchlist } });
@@ -271,7 +272,13 @@ export function watchlistFeature(store: WatchlistStore): ChartUiFeature {
           id: 'app.watchlist',
           label: 'Watchlist',
           fields: () => [
-            { kind: 'toggle', id: 'wl.sound', label: 'Sound on alerts', value: () => store.sound, set: (v) => store.setSound(v) },
+            {
+              kind: 'toggle',
+              id: 'wl.sound',
+              label: 'Sound on alerts',
+              value: () => store.sound,
+              set: (v) => store.setSound(v),
+            },
           ],
         }),
         ui.objectTree.register({
@@ -345,16 +352,16 @@ security guidance.
 
 ## 10. Performance tuning
 
-| Situation | Do this |
-|---|---|
-| Loading 100K+ bars | `series.setColumns({ time, open, high, low, close })` from typed arrays: no object per bar |
-| Reading data back | `series.columns()` instead of `data()` |
-| Realtime screens running for hours | `DatafeedController` `maxBars`, or trim history yourself periodically |
-| Bursts of ticks | Call `update` per tick; the scheduler draws once per frame. Do not call `render()` per tick |
-| Pointer effects in plugins | `top` layer + `requestRedraw('overlay')` |
-| Many indicators on one source | Add them through one `IndicatorManager`; the source's bars are prepared once per change |
-| Hundreds of price lines or orders | Draw lines in one path per style (as the trading overlay does); limit axis labels |
-| Very wide zoom-out | `timeScale.minBarSpacing` caps visible bars at about twice the pane width |
+| Situation                          | Do this                                                                                     |
+| ---------------------------------- | ------------------------------------------------------------------------------------------- |
+| Loading 100K+ bars                 | `series.setColumns({ time, open, high, low, close })` from typed arrays: no object per bar  |
+| Reading data back                  | `series.columns()` instead of `data()`                                                      |
+| Realtime screens running for hours | `DatafeedController` `maxBars`, or trim history yourself periodically                       |
+| Bursts of ticks                    | Call `update` per tick; the scheduler draws once per frame. Do not call `render()` per tick |
+| Pointer effects in plugins         | `top` layer + `requestRedraw('overlay')`                                                    |
+| Many indicators on one source      | Add them through one `IndicatorManager`; the source's bars are prepared once per change     |
+| Hundreds of price lines or orders  | Draw lines in one path per style (as the trading overlay does); limit axis labels           |
+| Very wide zoom-out                 | `timeScale.minBarSpacing` caps visible bars at about twice the pane width                   |
 
 Measure with `pnpm bench` (engine work, no-op canvas) and the playground's Performance page (real canvas). Numbers
 and the optimisations behind them are in [PERFORMANCE.md](PERFORMANCE.md).
@@ -388,7 +395,7 @@ Details: [SSR.md](SSR.md).
 ## 13. Hardening checklist
 
 - [ ] Strict Content-Security-Policy: pass `nonce` to `UiStylesProvider`, or ship `UI_CSS` as a file
-  (`inject={false}`).
+      (`inject={false}`).
 - [ ] Build datafeed URLs with `buildUrl`; never concatenate symbols into URLs.
 - [ ] Keep response and message size limits on (`maxResponseBytes`, `maxMessageBytes`).
 - [ ] Validate every custom `StateProvider.restore` and every extension-preference namespace.

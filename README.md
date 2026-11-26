@@ -42,22 +42,22 @@ settings) in English, Persian and Arabic with full right-to-left support.
 
 ## Packages
 
-| Package | Purpose |
-|---|---|
-| [`@market-chart/core`](packages/core) | Engine: data model, scales, renderer, interactions, events, plugins, custom series, chart sync; `./static` DOM-free geometry |
-| [`@market-chart/react`](packages/react) | `<Chart>`, series components, hooks, provider, `<ChartLayout>`; `./ssr` → `<StaticChart>` |
-| [`@market-chart/indicators`](packages/indicators) | 44 incremental indicators, chart manager; `./react` hooks |
-| [`@market-chart/drawing-tools`](packages/drawing-tools) | 35 drawing tools, selection, magnet, undo/redo, clipboard, serialisation; `./react` hooks |
-| [`@market-chart/charts`](packages/charts) | Heikin-Ashi, Renko, Kagi, Point & Figure, Line Break, footprint, heatmap, volume/market profile |
-| [`@market-chart/datafeed`](packages/datafeed) | `Datafeed` contract; static, REST, WebSocket, SSE and synthetic adapters; CSV/JSON import; chart binding with realtime and history paging; `./react` |
-| [`@market-chart/persistence`](packages/persistence) | Storage adapters (memory, Web Storage, IndexedDB, REST), versioned schemas, autosave, conflicts, cross-tab sync, workspaces; `./react` |
-| [`@market-chart/i18n`](packages/i18n) | Typed translations: English, Persian, Arabic and custom languages, plurals, fallback, text direction, locale formatting |
-| [`@market-chart/ui`](packages/ui) | Chart interface: one action registry for target-aware context menus, a configurable header and sidebar, shortcuts, settings and saved preferences; optional symbol search, price actions and order ticket; headless core, `./react` components |
-| [`@market-chart/trading`](packages/trading) | Your orders, positions (TP/SL), alerts and markers drawn at their prices: drag to modify, cancel, context menus, object tree; display only (it never trades); `./react` |
-| [`@market-chart/testing`](packages/testing) | Deterministic **synthetic** datasets, tick simulator, canvas mock for tests |
-| [`apps/docs`](apps/docs) | Documentation site: guides, live examples with their source, chart builder that generates code, reference generated from the packages (private) |
-| [`apps/playground`](apps/playground) | Vite app with 23 working examples, including the interface demos, a simulated trading page and a real-canvas performance page (private) |
-| [`apps/nextjs`](apps/nextjs) | Next.js App Router example: server-rendered SVG, progressive and interactive charts (private) |
+| Package                                                 | Purpose                                                                                                                                                                                                                                        |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`@market-chart/core`](packages/core)                   | Engine: data model, scales, renderer, interactions, events, plugins, custom series, chart sync; `./static` DOM-free geometry                                                                                                                   |
+| [`@market-chart/react`](packages/react)                 | `<Chart>`, series components, hooks, provider, `<ChartLayout>`; `./ssr` → `<StaticChart>`                                                                                                                                                      |
+| [`@market-chart/indicators`](packages/indicators)       | 44 incremental indicators, chart manager; `./react` hooks                                                                                                                                                                                      |
+| [`@market-chart/drawing-tools`](packages/drawing-tools) | 35 drawing tools, selection, magnet, undo/redo, clipboard, serialisation; `./react` hooks                                                                                                                                                      |
+| [`@market-chart/charts`](packages/charts)               | Heikin-Ashi, Renko, Kagi, Point & Figure, Line Break, footprint, heatmap, volume/market profile                                                                                                                                                |
+| [`@market-chart/datafeed`](packages/datafeed)           | `Datafeed` contract; static, REST, WebSocket, SSE and synthetic adapters; CSV/JSON import; chart binding with realtime and history paging; `./react`                                                                                           |
+| [`@market-chart/persistence`](packages/persistence)     | Storage adapters (memory, Web Storage, IndexedDB, REST), versioned schemas, autosave, conflicts, cross-tab sync, workspaces; `./react`                                                                                                         |
+| [`@market-chart/i18n`](packages/i18n)                   | Typed translations: English, Persian, Arabic and custom languages, plurals, fallback, text direction, locale formatting                                                                                                                        |
+| [`@market-chart/ui`](packages/ui)                       | Chart interface: one action registry for target-aware context menus, a configurable header and sidebar, shortcuts, settings and saved preferences; optional symbol search, price actions and order ticket; headless core, `./react` components |
+| [`@market-chart/trading`](packages/trading)             | Your orders, positions (TP/SL), alerts and markers drawn at their prices: drag to modify, cancel, context menus, object tree; display only (it never trades); `./react`                                                                        |
+| [`@market-chart/testing`](packages/testing)             | Deterministic **synthetic** datasets, tick simulator, canvas mock for tests                                                                                                                                                                    |
+| [`apps/docs`](apps/docs)                                | Documentation site: guides, live examples with their source, chart builder that generates code, reference generated from the packages (private)                                                                                                |
+| [`apps/playground`](apps/playground)                    | Vite app with 23 working examples, including the interface demos, a simulated trading page and a real-canvas performance page (private)                                                                                                        |
+| [`apps/nextjs`](apps/nextjs)                            | Next.js App Router example: server-rendered SVG, progressive and interactive charts (private)                                                                                                                                                  |
 
 ## Install
 
@@ -79,9 +79,18 @@ import { Chart, CandlestickSeries, HistogramSeries } from '@market-chart/react';
 
 export function TradingChart({ bars, volume }) {
   return (
-    <Chart theme="dark" height={600} onReady={(c) => c.priceScale('volume').applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } })}>
+    <Chart
+      theme="dark"
+      height={600}
+      onReady={(c) =>
+        c.priceScale('volume').applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } })
+      }
+    >
       <CandlestickSeries data={bars} />
-      <HistogramSeries data={volume} options={{ priceScaleId: 'volume', priceFormat: { type: 'volume' } }} />
+      <HistogramSeries
+        data={volume}
+        options={{ priceScaleId: 'volume', priceFormat: { type: 'volume' } }}
+      />
     </Chart>
   );
 }
@@ -148,7 +157,9 @@ import { ChartInterface, useChartUi } from '@market-chart/ui/react';
 function TradingChart({ bars }) {
   const [chart, setChart] = useState<ChartApi | null>(null);
   const ui = useChartUi(chart, {
-    capabilities: chart ? { drawings: getDrawingManager(chart), indicators: getIndicatorManager(chart) } : {},
+    capabilities: chart
+      ? { drawings: getDrawingManager(chart), indicators: getIndicatorManager(chart) }
+      : {},
   });
   return (
     <ChartInterface ui={ui} height={600}>
@@ -159,7 +170,9 @@ function TradingChart({ bars }) {
   );
 }
 
-<ChartProvider locale="fa">   {/* 'en', 'fa', 'ar', a registered language, or 'auto' */}
+<ChartProvider locale="fa">
+  {' '}
+  {/* 'en', 'fa', 'ar', a registered language, or 'auto' */}
   <TradingChart bars={bars} />
 </ChartProvider>;
 ```
@@ -241,19 +254,19 @@ immediately without a build.
 
 ### Everyday commands
 
-| Command | What it does |
-|---|---|
-| `pnpm dev` | Playground (Vite) with all examples |
-| `pnpm docs` / `pnpm docs:build` | Documentation site at <http://localhost:5173> / static build in `apps/docs/dist` (host it anywhere, e.g. GitHub Pages) |
-| `pnpm test` | All unit, integration and React tests (Vitest + jsdom), run against sources |
-| `pnpm test:watch` | Tests in watch mode |
-| `pnpm --filter @market-chart/datafeed test` | Tests of one package |
-| `pnpm build` | Builds every package with tsup (ESM + CJS + `.d.ts`) into `packages/*/dist` |
-| `pnpm bench` | Performance and memory benchmarks with budgets (100K–1M bars); results in `benchmarks/results/` |
-| `pnpm build; pnpm --filter nextjs-example dev` | Next.js example at <http://localhost:3000> (uses the built packages) |
-| `pnpm typecheck` | Strict TypeScript check of every package (run `pnpm build` first, packages import each other's types) |
-| `pnpm lint` | ESLint |
-| `pnpm format` / `pnpm format:check` | Prettier |
+| Command                                        | What it does                                                                                                           |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                     | Playground (Vite) with all examples                                                                                    |
+| `pnpm docs` / `pnpm docs:build`                | Documentation site at <http://localhost:5173> / static build in `apps/docs/dist` (host it anywhere, e.g. GitHub Pages) |
+| `pnpm test`                                    | All unit, integration and React tests (Vitest + jsdom), run against sources                                            |
+| `pnpm test:watch`                              | Tests in watch mode                                                                                                    |
+| `pnpm --filter @market-chart/datafeed test`    | Tests of one package                                                                                                   |
+| `pnpm build`                                   | Builds every package with tsup (ESM + CJS + `.d.ts`) into `packages/*/dist`                                            |
+| `pnpm bench`                                   | Performance and memory benchmarks with budgets (100K–1M bars); results in `benchmarks/results/`                        |
+| `pnpm build; pnpm --filter nextjs-example dev` | Next.js example at <http://localhost:3000> (uses the built packages)                                                   |
+| `pnpm typecheck`                               | Strict TypeScript check of every package (run `pnpm build` first, packages import each other's types)                  |
+| `pnpm lint`                                    | ESLint                                                                                                                 |
+| `pnpm format` / `pnpm format:check`            | Prettier                                                                                                               |
 
 A full local check before a commit or release:
 

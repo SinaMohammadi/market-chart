@@ -4,34 +4,34 @@ Step-by-step instructions to put market-chart online: the **source on GitHub**, 
 **documentation site** on a static host. Follow the parts in order the first time; for later releases only
 [part 6](#6-later-releases) is needed.
 
-| Part | What | When |
-|---|---|---|
-| [1](#1-accounts-and-tools) | Accounts and tools | once |
-| [2](#2-prepare-the-repository) | Prepare the repository | once (some steps after big changes) |
-| [3](#3-put-the-source-on-github) | Source on GitHub | once |
-| [4](#4-first-npm-release) | First npm release (from your computer) | once |
-| [5](#5-check-the-published-packages) | Check the published packages in a new project | every release |
-| [6](#6-later-releases) | Later releases with Changesets | every release |
-| [7](#7-automated-releases-optional) | CI and automated releases with npm provenance | optional, recommended |
-| [8](#8-deploy-the-documentation-site) | Documentation site | after each release |
-| [9](#9-optional-deploy-the-playground-and-the-nextjs-example) | Playground and Next.js example | optional |
-| [10](#10-fixing-mistakes) | Fixing mistakes | when needed |
+| Part                                                          | What                                          | When                                |
+| ------------------------------------------------------------- | --------------------------------------------- | ----------------------------------- |
+| [1](#1-accounts-and-tools)                                    | Accounts and tools                            | once                                |
+| [2](#2-prepare-the-repository)                                | Prepare the repository                        | once (some steps after big changes) |
+| [3](#3-put-the-source-on-github)                              | Source on GitHub                              | once                                |
+| [4](#4-first-npm-release)                                     | First npm release (from your computer)        | once                                |
+| [5](#5-check-the-published-packages)                          | Check the published packages in a new project | every release                       |
+| [6](#6-later-releases)                                        | Later releases with Changesets                | every release                       |
+| [7](#7-automated-releases-optional)                           | CI and automated releases with npm provenance | optional, recommended               |
+| [8](#8-deploy-the-documentation-site)                         | Documentation site                            | after each release                  |
+| [9](#9-optional-deploy-the-playground-and-the-nextjs-example) | Playground and Next.js example                | optional                            |
+| [10](#10-fixing-mistakes)                                     | Fixing mistakes                               | when needed                         |
 
 What gets published to npm (all public, MIT, version `0.1.0` today):
 
-| Package | Folder |
-|---|---|
-| `@market-chart/core` | `packages/core` |
-| `@market-chart/react` | `packages/react` |
-| `@market-chart/indicators` | `packages/indicators` |
+| Package                       | Folder                   |
+| ----------------------------- | ------------------------ |
+| `@market-chart/core`          | `packages/core`          |
+| `@market-chart/react`         | `packages/react`         |
+| `@market-chart/indicators`    | `packages/indicators`    |
 | `@market-chart/drawing-tools` | `packages/drawing-tools` |
-| `@market-chart/charts` | `packages/charts` |
-| `@market-chart/datafeed` | `packages/datafeed` |
-| `@market-chart/persistence` | `packages/persistence` |
-| `@market-chart/i18n` | `packages/i18n` |
-| `@market-chart/ui` | `packages/ui` |
-| `@market-chart/trading` | `packages/trading` |
-| `@market-chart/testing` | `packages/testing` |
+| `@market-chart/charts`        | `packages/charts`        |
+| `@market-chart/datafeed`      | `packages/datafeed`      |
+| `@market-chart/persistence`   | `packages/persistence`   |
+| `@market-chart/i18n`          | `packages/i18n`          |
+| `@market-chart/ui`            | `packages/ui`            |
+| `@market-chart/trading`       | `packages/trading`       |
+| `@market-chart/testing`       | `packages/testing`       |
 
 `apps/docs`, `apps/playground` and `apps/nextjs` are private: they are never published to npm (they are
 `"private": true` and ignored in `.changeset/config.json`).
@@ -53,12 +53,12 @@ What gets published to npm (all public, MIT, version `0.1.0` today):
    pnpm --version
    ```
 
-2. **npm account** at <https://www.npmjs.com/signup>. Turn on two-factor authentication (Account → *Two-Factor
-   Authentication*, "Authorization and writes").
+2. **npm account** at <https://www.npmjs.com/signup>. Turn on two-factor authentication (Account → _Two-Factor
+   Authentication_, "Authorization and writes").
 
 3. **npm organisation for the scope.** Every package is named `@market-chart/…`, so you need to own the
-   `market-chart` scope: npmjs.com → your avatar → *Add organization* → name `market-chart`, plan *Unlimited
-   public packages* (free). Check that the names are free:
+   `market-chart` scope: npmjs.com → your avatar → _Add organization_ → name `market-chart`, plan _Unlimited
+   public packages_ (free). Check that the names are free:
 
    ```powershell
    npm view @market-chart/core
@@ -101,14 +101,14 @@ whenever a peer changes. Use `workspace:^` for peer dependencies (published as `
 
 Files and fields to change (`peerDependencies` only):
 
-| File | Peer dependencies to change to `workspace:^` |
-|---|---|
-| `packages/datafeed/package.json` | `@market-chart/react` |
-| `packages/drawing-tools/package.json` | `@market-chart/react` |
-| `packages/indicators/package.json` | `@market-chart/react` |
-| `packages/persistence/package.json` | `@market-chart/react` |
-| `packages/ui/package.json` | `@market-chart/drawing-tools`, `@market-chart/indicators`, `@market-chart/react` |
-| `packages/trading/package.json` | `@market-chart/i18n`, `@market-chart/react`, `@market-chart/ui` |
+| File                                  | Peer dependencies to change to `workspace:^`                                     |
+| ------------------------------------- | -------------------------------------------------------------------------------- |
+| `packages/datafeed/package.json`      | `@market-chart/react`                                                            |
+| `packages/drawing-tools/package.json` | `@market-chart/react`                                                            |
+| `packages/indicators/package.json`    | `@market-chart/react`                                                            |
+| `packages/persistence/package.json`   | `@market-chart/react`                                                            |
+| `packages/ui/package.json`            | `@market-chart/drawing-tools`, `@market-chart/indicators`, `@market-chart/react` |
+| `packages/trading/package.json`       | `@market-chart/i18n`, `@market-chart/react`, `@market-chart/ui`                  |
 
 Then release all packages with one shared version, so the ranges always line up. In `.changeset/config.json`
 set:
@@ -144,7 +144,7 @@ If the repository moves, update these three URLs in all 11 files. Optionally add
 
 ### 2.4 License holder
 
-`LICENSE` (in the root and in every package) says *market-chart contributors*. Replace it with your name or
+`LICENSE` (in the root and in every package) says _market-chart contributors_. Replace it with your name or
 organisation if you prefer; keep the MIT text.
 
 ### 2.5 Tooling updates (recommended)
@@ -244,10 +244,10 @@ is not part of `pnpm test` yet (planned together with the CI workflows).
    ```
 
 3. Repository settings on GitHub:
-   - *Settings → Code security*: turn on **Private vulnerability reporting** (`SECURITY.md` points to it),
+   - _Settings → Code security_: turn on **Private vulnerability reporting** (`SECURITY.md` points to it),
      Dependabot alerts and secret scanning.
-   - *Settings → Branches*: protect `main` (require pull requests and, once part 7 is set up, the CI check).
-   - *About* (gear on the repository page): description, website (the docs URL from part 8), topics.
+   - _Settings → Branches_: protect `main` (require pull requests and, once part 7 is set up, the CI check).
+   - _About_ (gear on the repository page): description, website (the docs URL from part 8), topics.
 
 ## 4. First npm release
 
@@ -309,7 +309,7 @@ repository.
    git push --follow-tags
    ```
 
-5. Create a GitHub release for the tag of `@market-chart/core@0.1.0` (*Releases → Draft a new release*), with
+5. Create a GitHub release for the tag of `@market-chart/core@0.1.0` (_Releases → Draft a new release_), with
    a short summary and a link to the documentation.
 
 ## 5. Check the published packages
@@ -509,17 +509,17 @@ jobs:
 
 Setup:
 
-1. npmjs.com → *Access Tokens* → *Generate New Token* → **Granular Access Token**: packages and scopes →
-   *Read and write* for `@market-chart`; organisation `market-chart`; an expiry date. Copy the token (it is
+1. npmjs.com → _Access Tokens_ → _Generate New Token_ → **Granular Access Token**: packages and scopes →
+   _Read and write_ for `@market-chart`; organisation `market-chart`; an expiry date. Copy the token (it is
    shown once).
-2. GitHub → repository → *Settings → Secrets and variables → Actions* → *New repository secret*: name
+2. GitHub → repository → _Settings → Secrets and variables → Actions_ → _New repository secret_: name
    `NPM_TOKEN`, value the token. Never put the token in a file in the repository.
-3. GitHub → *Settings → Actions → General* → *Workflow permissions*: allow GitHub Actions to create pull
+3. GitHub → _Settings → Actions → General_ → _Workflow permissions_: allow GitHub Actions to create pull
    requests.
 4. Provenance needs the `repository` field from 2.3 to match the GitHub repository.
 
 npm also supports **trusted publishing** (no token: npm trusts this repository's workflow). If you set it up
-for each package on npmjs.com (*Settings → Trusted publishing*), remove `NPM_TOKEN` and `NODE_AUTH_TOKEN`
+for each package on npmjs.com (_Settings → Trusted publishing_), remove `NPM_TOKEN` and `NODE_AUTH_TOKEN`
 from the workflow.
 
 From then on, a release is: add changesets in your pull requests, merge them, then merge the "Version
@@ -535,26 +535,26 @@ each release.
 
 Both read `apps/docs/public/_headers` (Content-Security-Policy, HSTS, frame and referrer policies).
 
-Cloudflare Pages: *Workers & Pages → Create → Pages → Connect to Git*, pick the repository, then
+Cloudflare Pages: _Workers & Pages → Create → Pages → Connect to Git_, pick the repository, then
 
-| Setting | Value |
-|---|---|
-| Framework preset | None |
-| Build command | `corepack enable && pnpm install --frozen-lockfile && pnpm docs:build` |
-| Build output directory | `apps/docs/dist` |
-| Environment variable | `NODE_VERSION` = `22` |
+| Setting                | Value                                                                  |
+| ---------------------- | ---------------------------------------------------------------------- |
+| Framework preset       | None                                                                   |
+| Build command          | `corepack enable && pnpm install --frozen-lockfile && pnpm docs:build` |
+| Build output directory | `apps/docs/dist`                                                       |
+| Environment variable   | `NODE_VERSION` = `22`                                                  |
 
-Netlify: *Add new site → Import an existing project*, pick the repository, then
+Netlify: _Add new site → Import an existing project_, pick the repository, then
 
-| Setting | Value |
-|---|---|
-| Base directory | (empty) |
-| Build command | `corepack enable && pnpm install --frozen-lockfile && pnpm docs:build` |
-| Publish directory | `apps/docs/dist` |
-| Environment variable | `NODE_VERSION` = `22` |
+| Setting              | Value                                                                  |
+| -------------------- | ---------------------------------------------------------------------- |
+| Base directory       | (empty)                                                                |
+| Build command        | `corepack enable && pnpm install --frozen-lockfile && pnpm docs:build` |
+| Publish directory    | `apps/docs/dist`                                                       |
+| Environment variable | `NODE_VERSION` = `22`                                                  |
 
 Each push to `main` then redeploys the site. To deploy by hand instead, build locally and upload
-`apps/docs/dist` (Netlify: drag the folder onto *Sites → Deploy manually*; Cloudflare: `pnpm dlx wrangler
+`apps/docs/dist` (Netlify: drag the folder onto _Sites → Deploy manually_; Cloudflare: `pnpm dlx wrangler
 pages deploy apps/docs/dist`).
 
 ### Option B: GitHub Pages
@@ -599,32 +599,32 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-Then GitHub → *Settings → Pages → Source*: **GitHub Actions**. The site appears at
+Then GitHub → _Settings → Pages → Source_: **GitHub Actions**. The site appears at
 `https://sinamohammadi.github.io/market-chart/`.
 
 ### Check the deployed site
 
-Open the site and go through *Live examples*, *Chart builder* and *Reference → Symbols, price actions and
-trading objects*. Open the browser's developer tools: the console must show no errors (in particular no
+Open the site and go through _Live examples_, _Chart builder_ and _Reference → Symbols, price actions and
+trading objects_. Open the browser's developer tools: the console must show no errors (in particular no
 Content-Security-Policy violations), and every example must render. On Cloudflare Pages or Netlify, the
-*Network* tab shows the headers from `_headers` on the document response.
+_Network_ tab shows the headers from `_headers` on the document response.
 
 ## 9. Optional: deploy the playground and the Next.js example
 
 **Playground** (a static Vite app, like the docs):
 
-| Setting | Value |
-|---|---|
-| Build command | `corepack enable && pnpm install --frozen-lockfile && pnpm --filter playground build` |
-| Output directory | `apps/playground/dist` |
+| Setting          | Value                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| Build command    | `corepack enable && pnpm install --frozen-lockfile && pnpm --filter playground build` |
+| Output directory | `apps/playground/dist`                                                                |
 
-**Next.js example** on Vercel: *Add New → Project*, import the repository, then
+**Next.js example** on Vercel: _Add New → Project_, import the repository, then
 
-| Setting | Value |
-|---|---|
-| Root directory | `apps/nextjs` |
+| Setting         | Value                                                           |
+| --------------- | --------------------------------------------------------------- |
+| Root directory  | `apps/nextjs`                                                   |
 | Install command | `cd ../.. && corepack enable && pnpm install --frozen-lockfile` |
-| Build command | `cd ../.. && pnpm build && pnpm --filter nextjs-example build` |
+| Build command   | `cd ../.. && pnpm build && pnpm --filter nextjs-example build`  |
 
 The example uses the built packages (`dist/`), so the packages are built first. Its security headers are set
 in `apps/nextjs/next.config.mjs`.
@@ -640,17 +640,17 @@ in `apps/nextjs/next.config.mjs`.
 
 - **Unpublish** is only possible within 72 hours and only if no other package depends on it; prefer
   deprecating.
-- **Leaked token**: revoke it on npmjs.com (*Access Tokens*) and on GitHub at once, then create a new one.
+- **Leaked token**: revoke it on npmjs.com (_Access Tokens_) and on GitHub at once, then create a new one.
 
 ### Common errors
 
-| Error | Cause and fix |
-|---|---|
-| `pnpm build` fails in `@market-chart/trading` with "Cannot find module '@market-chart/core'" | Workspace links missing: run `pnpm install` (2.1) |
-| `E404` / `E403` on publish for `@market-chart/…` | You are not logged in (`npm whoami`), not a member of the `market-chart` organisation, or the scope belongs to someone else (1.3) |
-| `EOTP` | Two-factor code needed: run `pnpm release` again and enter the code |
-| `You cannot publish over the previously published versions` | That version is already on npm: bump it with a changeset |
-| Published `package.json` contains `workspace:` | It was published with `npm publish` inside a package folder. Always use `pnpm release` (or `pnpm publish`), which rewrites workspace ranges |
-| Users cannot install `@market-chart/ui` next to a newer `@market-chart/react` | Exact peer ranges: do 2.2 and release a new version |
-| Provenance error in CI | `id-token: write` missing, or the `repository` field does not match the GitHub repository (2.3) |
-| Docs site shows a blank page | Open the console. A CSP violation on a custom host means its header policy is stricter than `_headers`; copy the policy from `_headers` |
+| Error                                                                                        | Cause and fix                                                                                                                               |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm build` fails in `@market-chart/trading` with "Cannot find module '@market-chart/core'" | Workspace links missing: run `pnpm install` (2.1)                                                                                           |
+| `E404` / `E403` on publish for `@market-chart/…`                                             | You are not logged in (`npm whoami`), not a member of the `market-chart` organisation, or the scope belongs to someone else (1.3)           |
+| `EOTP`                                                                                       | Two-factor code needed: run `pnpm release` again and enter the code                                                                         |
+| `You cannot publish over the previously published versions`                                  | That version is already on npm: bump it with a changeset                                                                                    |
+| Published `package.json` contains `workspace:`                                               | It was published with `npm publish` inside a package folder. Always use `pnpm release` (or `pnpm publish`), which rewrites workspace ranges |
+| Users cannot install `@market-chart/ui` next to a newer `@market-chart/react`                | Exact peer ranges: do 2.2 and release a new version                                                                                         |
+| Provenance error in CI                                                                       | `id-token: write` missing, or the `repository` field does not match the GitHub repository (2.3)                                             |
+| Docs site shows a blank page                                                                 | Open the console. A CSP violation on a custom host means its header policy is stricter than `_headers`; copy the policy from `_headers`     |

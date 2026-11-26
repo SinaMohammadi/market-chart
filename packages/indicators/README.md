@@ -23,10 +23,10 @@ candles.setData(bars);
 
 const indicators = getIndicatorManager(chart);
 const rsi = indicators.add('rsi', candles, { params: { length: 14 } }); // new pane, 70/50/30 levels
-const bb = indicators.add('bollinger', candles);                         // overlay with a band fill
+const bb = indicators.add('bollinger', candles); // overlay with a band fill
 rsi.setParams({ length: 21 });
-candles.update(tick);                       // indicators update incrementally
-const saved = indicators.serialize();       // plain JSON
+candles.update(tick); // indicators update incrementally
+const saved = indicators.serialize(); // plain JSON
 indicators.restore(saved, (id) => chart.series().find((s) => s.id === id));
 ```
 
@@ -41,13 +41,19 @@ import { Indicator } from '@market-chart/indicators/react';
 <Chart>
   <CandlestickSeries data={bars} ref={setCandles} />
   <Indicator type="macd" source={candles} params={{ fast: 12, slow: 26 }} />
-</Chart>
+</Chart>;
 ```
 
 ## Custom indicators
 
 ```ts
-import { calc, defineIndicator, Ema, createDefaultRegistry, IndicatorManager } from '@market-chart/indicators';
+import {
+  calc,
+  defineIndicator,
+  Ema,
+  createDefaultRegistry,
+  IndicatorManager,
+} from '@market-chart/indicators';
 
 const zlema = defineIndicator({
   type: 'zlema',
@@ -75,13 +81,13 @@ realtime updates of the last bar.
 
 ## Built-in indicators
 
-| Category | Indicators |
-|---|---|
-| Trend | SMA, EMA, WMA, VWMA, DEMA, TEMA, HMA, MA Ribbon, Supertrend, Parabolic SAR, ADX (+DI/−DI), Aroon, Ichimoku Cloud |
-| Momentum | RSI, MACD, Stochastic, Stochastic RSI, CCI, ROC, Momentum, Williams %R, Awesome Oscillator, Ultimate Oscillator, TRIX |
-| Volatility | Bollinger Bands, ATR, Keltner Channels, Donchian Channels, Standard Deviation, Historical Volatility, Chaikin Volatility |
-| Volume | Volume (+MA), OBV, VWAP (day/week/month, bands), Anchored VWAP, MFI, CMF, Accumulation/Distribution, Volume Oscillator |
-| Advanced | Pivot Points (traditional, Fibonacci, Woodie, Camarilla), CPR, Fibonacci retracement levels (rolling), Support/Resistance (pivot-based), Premium/Discount zones |
+| Category   | Indicators                                                                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Trend      | SMA, EMA, WMA, VWMA, DEMA, TEMA, HMA, MA Ribbon, Supertrend, Parabolic SAR, ADX (+DI/−DI), Aroon, Ichimoku Cloud                                                |
+| Momentum   | RSI, MACD, Stochastic, Stochastic RSI, CCI, ROC, Momentum, Williams %R, Awesome Oscillator, Ultimate Oscillator, TRIX                                           |
+| Volatility | Bollinger Bands, ATR, Keltner Channels, Donchian Channels, Standard Deviation, Historical Volatility, Chaikin Volatility                                        |
+| Volume     | Volume (+MA), OBV, VWAP (day/week/month, bands), Anchored VWAP, MFI, CMF, Accumulation/Distribution, Volume Oscillator                                          |
+| Advanced   | Pivot Points (traditional, Fibonacci, Woodie, Camarilla), CPR, Fibonacci retracement levels (rolling), Support/Resistance (pivot-based), Premium/Discount zones |
 
 ### Conventions and known differences
 

@@ -2,11 +2,11 @@
 
 Three pages showing the integration approaches, all with **synthetic** data:
 
-| Route | Rendering | Uses |
-|---|---|---|
-| `/` | Server Component, SVG only, no chart JavaScript on the client | `StaticChart` from `@market-chart/react/ssr` |
-| `/progressive` | Server-rendered SVG, upgraded to the canvas engine when visible or touched | `ProgressiveChart` from `@market-chart/react` |
-| `/chart` | Client component with the full engine | `Chart`, `DatafeedSeries`, `Indicator`, `useChartPersistence` |
+| Route          | Rendering                                                                  | Uses                                                          |
+| -------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `/`            | Server Component, SVG only, no chart JavaScript on the client              | `StaticChart` from `@market-chart/react/ssr`                  |
+| `/progressive` | Server-rendered SVG, upgraded to the canvas engine when visible or touched | `ProgressiveChart` from `@market-chart/react`                 |
+| `/chart`       | Client component with the full engine                                      | `Chart`, `DatafeedSeries`, `Indicator`, `useChartPersistence` |
 
 ## Run
 

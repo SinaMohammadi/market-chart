@@ -3,11 +3,11 @@
 market-chart supports React Server Components, the Next.js App Router, other SSR frameworks and plain client
 apps. There are three ways to put a chart on a server-rendered page:
 
-| Approach | Server output | Client JavaScript | Use for |
-|---|---|---|---|
-| `StaticChart` from `@market-chart/react/ssr` | SVG | none for the chart | Landing pages, market overviews, previews, SEO content |
-| `ProgressiveChart` from `@market-chart/react` | the same SVG | the engine, loaded when the chart is needed | Pages where most visitors only look, some interact |
-| `Chart` from `@market-chart/react` | a sized empty `<div>` | the engine | Trading screens and dashboards |
+| Approach                                      | Server output         | Client JavaScript                           | Use for                                                |
+| --------------------------------------------- | --------------------- | ------------------------------------------- | ------------------------------------------------------ |
+| `StaticChart` from `@market-chart/react/ssr`  | SVG                   | none for the chart                          | Landing pages, market overviews, previews, SEO content |
+| `ProgressiveChart` from `@market-chart/react` | the same SVG          | the engine, loaded when the chart is needed | Pages where most visitors only look, some interact     |
+| `Chart` from `@market-chart/react`            | a sized empty `<div>` | the engine                                  | Trading screens and dashboards                         |
 
 A working example with all three is in [`apps/nextjs`](../apps/nextjs).
 
@@ -36,7 +36,16 @@ import { StaticChart } from '@market-chart/react/ssr';
 
 export default async function Page() {
   const history = await loadDailyCloses(); // your data, on the server
-  return <StaticChart type="area" data={history} height={180} theme="dark" title="Closing price, 90 days" showLastValue />;
+  return (
+    <StaticChart
+      type="area"
+      data={history}
+      height={180}
+      theme="dark"
+      title="Closing price, 90 days"
+      showLastValue
+    />
+  );
 }
 ```
 
@@ -51,7 +60,15 @@ import { ProgressiveChart } from '@market-chart/react';
 
 export default async function AssetPage() {
   const candles = await loadCandles();
-  return <ProgressiveChart type="candlestick" data={candles} height={360} theme="dark" activate="visible" />;
+  return (
+    <ProgressiveChart
+      type="candlestick"
+      data={candles}
+      height={360}
+      theme="dark"
+      activate="visible"
+    />
+  );
 }
 ```
 
@@ -85,7 +102,8 @@ export function TradingChart({ symbol }: { symbol: string }) {
     () =>
       createRestDatafeed({
         // Every value is encoded; never concatenate symbols into URLs.
-        history: ({ symbol, interval, from, to }) => buildUrl('/api/candles', { symbol, interval, from, to }),
+        history: ({ symbol, interval, from, to }) =>
+          buildUrl('/api/candles', { symbol, interval, from, to }),
       }),
     [],
   );

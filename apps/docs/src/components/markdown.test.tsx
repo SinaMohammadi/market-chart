@@ -31,6 +31,20 @@ describe('docs Markdown links (security)', () => {
     expect(resolveLink('HTTPS://example.com').external).toBe(true);
     expect(resolveLink('mailto:security@example.com').external).toBe(true);
   });
+  it('maps links between repository documents to their documentation pages', () => {
+    const cases: [string, string][] = [
+      ['docs/ADVANCED.md', '#/guides/advanced'],
+      ['../../docs/PUBLISHING.md#2-prepare-the-repository', '#/guides/publishing'],
+      ['LEGAL.md#trading-interfaces', '#/license'],
+      ['../../SECURITY.md', '#/guides/security'],
+      ['../../docs/PERFORMANCE.md', '#/guides/performance'],
+      ['FEATURE_MATRIX.md', '#/status'],
+      ['packages/trading', '#/packages/trading'],
+      ['../trading/README.md', '#/packages/trading'],
+      ['../ui', '#/packages/ui'],
+    ];
+    for (const [link, route] of cases) expect(resolveLink(link).url, link).toBe(route);
+  });
   it('escapes markup in text, code and link labels', () => {
     const out = html('<img src=x onerror=alert(1)> `<script>` [<b>x</b>](https://e.test)');
     expect(out).not.toContain('<img');

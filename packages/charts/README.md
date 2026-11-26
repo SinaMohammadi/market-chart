@@ -5,20 +5,20 @@ test or run in a worker; renderers plug into the core's custom-series API.
 
 ## Chart types
 
-| Type | How | Notes |
-|---|---|---|
-| Heikin-Ashi | `heikinAshi(bars)` → candlestick series | |
-| Renko | `renko(bars, { boxSize: 50 \| { atr: 14 }, source })` → candlestick series | Traditional: reversals need two boxes |
-| Line Break | `lineBreak(bars, { lines: 3 })` | |
-| Range bars | `rangeBars(ticksOrBars, { range })` | Exact with ticks; OHLC input assumes an intrabar path |
-| Tick bars | `tickBars(trades, { count })` | |
-| Spread | `spread(a, b, 'difference' \| 'ratio')` → line series | Aligned on common times |
-| Kagi | `addKagiSeries(chart, { reversal, mode })` | Yang (thick) and yin (thin) lines |
-| Point & Figure | `addPointFigureSeries(chart, { boxSize, reversal: 3 })` | X/O boxes |
-| Hollow candles | `addHollowCandleSeries(chart)` | Hollow when close > open; colour vs previous close |
-| Volume candles | `addVolumeCandleSeries(chart)` | Width proportional to volume |
-| Footprint | `addFootprintSeries(chart, { tickSize })` + `aggregateFootprint(trades, …)` | Bid × ask per level, diagonal imbalances, per-bar POC |
-| Liquidity heatmap | `addHeatmapSeries(chart, { priceStep })` with order-book snapshots | Size per price and time, mid price on top |
+| Type              | How                                                                         | Notes                                                 |
+| ----------------- | --------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Heikin-Ashi       | `heikinAshi(bars)` → candlestick series                                     |                                                       |
+| Renko             | `renko(bars, { boxSize: 50 \| { atr: 14 }, source })` → candlestick series  | Traditional: reversals need two boxes                 |
+| Line Break        | `lineBreak(bars, { lines: 3 })`                                             |                                                       |
+| Range bars        | `rangeBars(ticksOrBars, { range })`                                         | Exact with ticks; OHLC input assumes an intrabar path |
+| Tick bars         | `tickBars(trades, { count })`                                               |                                                       |
+| Spread            | `spread(a, b, 'difference' \| 'ratio')` → line series                       | Aligned on common times                               |
+| Kagi              | `addKagiSeries(chart, { reversal, mode })`                                  | Yang (thick) and yin (thin) lines                     |
+| Point & Figure    | `addPointFigureSeries(chart, { boxSize, reversal: 3 })`                     | X/O boxes                                             |
+| Hollow candles    | `addHollowCandleSeries(chart)`                                              | Hollow when close > open; colour vs previous close    |
+| Volume candles    | `addVolumeCandleSeries(chart)`                                              | Width proportional to volume                          |
+| Footprint         | `addFootprintSeries(chart, { tickSize })` + `aggregateFootprint(trades, …)` | Bid × ask per level, diagonal imbalances, per-bar POC |
+| Liquidity heatmap | `addHeatmapSeries(chart, { priceStep })` with order-book snapshots          | Size per price and time, mid price on top             |
 
 Renko, Kagi, Point & Figure and Line Break don't depend on time. Each brick, column or line takes the time of the
 bar that formed it, plus 1 ms when one bar forms several, so times stay strictly increasing.
@@ -26,10 +26,10 @@ bar that formed it, plus 1 ms when one bar forms several, so times stay strictly
 ## Profiles
 
 ```ts
-addVolumeProfile(chart, candles, { mode: 'visible', rows: 48 });                // follows scrolling/zooming
-addVolumeProfile(chart, candles, { mode: 'session', rows: 24 });                // one per UTC day
-addVolumeProfile(chart, candles, { mode: 'fixed', from: t0, to: t1, trades });  // exact buy/sell split from trades
-addMarketProfile(chart, candles, { periodMinutes: 30 });                         // TPO letters, POC, value area, initial balance
+addVolumeProfile(chart, candles, { mode: 'visible', rows: 48 }); // follows scrolling/zooming
+addVolumeProfile(chart, candles, { mode: 'session', rows: 24 }); // one per UTC day
+addVolumeProfile(chart, candles, { mode: 'fixed', from: t0, to: t1, trades }); // exact buy/sell split from trades
+addMarketProfile(chart, candles, { periodMinutes: 30 }); // TPO letters, POC, value area, initial balance
 ```
 
 `computeVolumeProfile` and `computeMarketProfile` are available without a chart. Value areas use the
@@ -43,7 +43,9 @@ closed up. The result says so with `approximate: true`.
 const footprint = aggregateFootprint(trades, { interval: 60_000, tickSize: 0.5 });
 addFootprintSeries(chart, { tickSize: 0.5 }).setData(footprint);
 chart.addSeries('histogram', { pane: 1 }).setData(deltaHistogram(footprint));
-chart.addSeries('candlestick', { pane: 2 }).setData(cumulativeVolumeDelta(trades, { interval: 60_000 }));
+chart
+  .addSeries('candlestick', { pane: 2 })
+  .setData(cumulativeVolumeDelta(trades, { interval: 60_000 }));
 ```
 
 CVD candles are computed trade by trade, so their intrabar highs and lows are exact.
@@ -53,7 +55,12 @@ CVD candles are computed trade by trade, so their intrabar highs and lows are ex
 Every renderer here is an ordinary `CustomSeriesView` from `@market-chart/core`:
 
 ```ts
-const series = chart.addCustomSeries({ kind: 'ohlc', paint(c) { /* draw with c.ctx, c.x(i), c.y(price) */ } });
+const series = chart.addCustomSeries({
+  kind: 'ohlc',
+  paint(c) {
+    /* draw with c.ctx, c.x(i), c.y(price) */
+  },
+});
 ```
 
 Data the store cannot hold (footprint levels, order books) stays in the view, keyed by time. The series data

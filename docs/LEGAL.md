@@ -101,10 +101,10 @@ application installs itself.
 
 The documentation site and the playground bundle the following open-source software:
 
-| Software | Licence | Copyright |
-|---|---|---|
-| React (`react`) | MIT | Copyright (c) Meta Platforms, Inc. and affiliates |
-| React DOM (`react-dom`, including `scheduler`) | MIT | Copyright (c) Meta Platforms, Inc. and affiliates |
+| Software                                       | Licence | Copyright                                         |
+| ---------------------------------------------- | ------- | ------------------------------------------------- |
+| React (`react`)                                | MIT     | Copyright (c) Meta Platforms, Inc. and affiliates |
+| React DOM (`react-dom`, including `scheduler`) | MIT     | Copyright (c) Meta Platforms, Inc. and affiliates |
 
 The Next.js example additionally uses Next.js (MIT, Copyright (c) Vercel, Inc.). Development tools (TypeScript,
 Vite, Vitest, tsup, esbuild, ESLint, Prettier, Changesets, jsdom) are used to build and test the project and are
