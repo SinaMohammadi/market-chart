@@ -463,12 +463,15 @@ describe('synthetic datafeed', () => {
 
   it('respects history start, weekends and gaps', async () => {
     const feed = createSyntheticDatafeed({ now: () => NOW });
-    const info = await feed.resolveSymbol('SYN:ACME');
+    const info = await feed.resolveSymbol('SYN:EXAMPLE');
     expect(info.session).not.toBe('24x7');
-    const days = await feed.getHistoricalData('SYN:ACME', '1D', { from: NOW - 14 * DAY, to: NOW });
+    const days = await feed.getHistoricalData('SYN:EXAMPLE', '1D', {
+      from: NOW - 14 * DAY,
+      to: NOW,
+    });
     expect(days.every((c) => ![0, 6].includes(new Date(c.time).getUTCDay()))).toBe(true);
     expect(
-      await feed.getHistoricalData('SYN:ACME', '1D', { from: 0, to: info.historyStart! - 1 }),
+      await feed.getHistoricalData('SYN:EXAMPLE', '1D', { from: 0, to: info.historyStart! - 1 }),
     ).toHaveLength(0);
     const gappy = createSyntheticDatafeed({ now: () => NOW, gapRatio: 0.3 });
     const bars = await gappy.getHistoricalData('SYN:BTCUSD', '1m', {

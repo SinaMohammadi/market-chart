@@ -9,7 +9,7 @@ import { Indicator } from '@market-chart/indicators/react';
 import { createLocalStorage } from '@market-chart/persistence';
 import { useChartPersistence } from '@market-chart/persistence/react';
 
-const SYMBOLS = ['SYN:BTCUSD', 'SYN:ETHUSD', 'SYN:ACME', 'SYN:EURUSD'];
+const SYMBOLS = ['SYN:BTCUSD', 'SYN:ETHUSD', 'SYN:EXAMPLE', 'SYN:EURUSD'];
 const INTERVALS = ['5m', '15m', '1h', '4h', '1D'];
 
 function SaveStatus() {

@@ -5,7 +5,7 @@ import { Indicator } from '@market-chart/indicators/react';
 import { syntheticBars } from '../data';
 import { useTheme } from '../site';
 
-const bars = syntheticBars('ACME', 600);
+const bars = syntheticBars('EXAMPLE', 600);
 
 /** Any built-in indicator by type, with its default parameters (overlay or own pane). */
 export default function IndicatorPreview({ type }: { type: string }) {

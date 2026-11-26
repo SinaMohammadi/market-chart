@@ -61,8 +61,8 @@ const DEFAULT_SYMBOLS: readonly SyntheticSymbol[] = [
     seed: 23,
   },
   {
-    symbol: 'SYN:ACME',
-    name: 'Synthetic ACME Corp.',
+    symbol: 'SYN:EXAMPLE',
+    name: 'Synthetic Example Corp.',
     type: 'stock',
     startPrice: 180,
     volatility: 0.8,

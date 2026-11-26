@@ -148,8 +148,8 @@ export const syntheticAssets: Readonly<Record<string, SyntheticAsset>> = {
     skipWeekends: true,
     seed: 13,
   },
-  ACME: {
-    symbol: 'ACME',
+  EXAMPLE: {
+    symbol: 'EXAMPLE',
     description: 'Synthetic equity (large-cap-like)',
     startPrice: 185,
     volatility: 0.008,

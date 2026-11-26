@@ -296,12 +296,12 @@ describe('DatafeedController', () => {
       }),
     );
     void c.setSymbol('SYN:ETHUSD', '15m');
-    await c.setSymbol('SYN:ACME', '1D');
+    await c.setSymbol('SYN:EXAMPLE', '1D');
     await waitFor(() => c.status === 'ready');
-    expect(c.symbol).toBe('SYN:ACME');
+    expect(c.symbol).toBe('SYN:EXAMPLE');
     expect(c.interval).toBe('1D');
     const last = series.data()[series.length() - 1] as Candle;
-    expect(last.close).toBe(feed.priceAt('SYN:ACME', NOW));
+    expect(last.close).toBe(feed.priceAt('SYN:EXAMPLE', NOW));
     expect(series.data().every((d) => d.time % 86_400_000 === 0)).toBe(true);
   });
 

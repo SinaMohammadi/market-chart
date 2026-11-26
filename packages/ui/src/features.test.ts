@@ -54,7 +54,7 @@ const LIST: SymbolItem[] = [
   { symbol: 'BTCUSDT', name: 'Bitcoin', exchange: 'Sim Exchange', group: 'crypto' },
   { symbol: 'ETHUSDT', name: 'Ethereum', group: 'crypto' },
   { symbol: 'EURUSD', name: 'Euro / US Dollar', group: 'forex' },
-  { symbol: 'ACME', name: 'Acme Corp.', group: 'stocks', description: 'Large-cap listing' },
+  { symbol: 'EXAMPLE', name: 'Example Corp.', group: 'stocks', description: 'Large-cap listing' },
   { symbol: 'USDJPY', name: 'US Dollar / Yen', group: 'forex' },
 ];
 
@@ -103,8 +103,8 @@ describe('symbol search', () => {
       'ETHUSDT',
       'EURUSD',
     ]);
-    expect(filterSymbols(LIST, 'acme corp', 10).map((i) => i.symbol)).toEqual(['ACME']);
-    expect(filterSymbols(LIST, 'large-cap', 10).map((i) => i.symbol)).toEqual(['ACME']);
+    expect(filterSymbols(LIST, 'example corp', 10).map((i) => i.symbol)).toEqual(['EXAMPLE']);
+    expect(filterSymbols(LIST, 'large-cap', 10).map((i) => i.symbol)).toEqual(['EXAMPLE']);
     expect(filterSymbols(LIST, '', 2)).toHaveLength(2);
     expect(filterSymbols(LIST, '', 10, 'forex').map((i) => i.symbol)).toEqual(['EURUSD', 'USDJPY']);
   });
@@ -165,17 +165,17 @@ describe('symbol search', () => {
       'crypto',
       'stocks',
     ]);
-    search.toggleFavorite('ACME');
+    search.toggleFavorite('EXAMPLE');
     search.toggleFavorite('EURUSD');
-    expect(ui.preferences.get().symbols.favorites).toEqual(['ACME', 'EURUSD']);
+    expect(ui.preferences.get().symbols.favorites).toEqual(['EXAMPLE', 'EURUSD']);
     search.open({ group: 'favorites' });
-    expect(search.state.results.map((r) => r.symbol)).toEqual(['ACME', 'EURUSD']);
+    expect(search.state.results.map((r) => r.symbol)).toEqual(['EXAMPLE', 'EURUSD']);
     // Names come from the list.
-    expect(search.state.results[0]!.name).toBe('Acme Corp.');
+    expect(search.state.results[0]!.name).toBe('Example Corp.');
     search.setGroup('forex');
     expect(search.state.results.map((r) => r.symbol)).toEqual(['EURUSD', 'USDJPY']);
-    search.toggleFavorite('ACME');
-    expect(search.isFavorite('ACME')).toBe(false);
+    search.toggleFavorite('EXAMPLE');
+    expect(search.isFavorite('EXAMPLE')).toBe(false);
   });
 
   it('hides favorites and recents when switched off', () => {
@@ -184,7 +184,7 @@ describe('symbol search', () => {
       features: [symbolSearch({ favorites: false, recent: false })],
     });
     expect(ui.symbols!.groups().map((g) => g.id)).toEqual(['all', 'stocks', 'crypto', 'forex']);
-    ui.symbols!.toggleFavorite('ACME');
+    ui.symbols!.toggleFavorite('EXAMPLE');
     expect(ui.preferences.get().symbols.favorites).toEqual([]);
   });
 
@@ -639,7 +639,7 @@ describe('order ticket', () => {
       () => new Promise<{ ok: boolean; message?: string }>((r) => (resolve = r)),
     );
     ui = new ChartUi(chart, {
-      capabilities: { trading: trading(submit), symbols: staticSource('ACME') },
+      capabilities: { trading: trading(submit), symbols: staticSource('EXAMPLE') },
       features: [priceActions(), orderTicket()],
     });
     const price = ui.priceActions!.contextAt({ price: last - 3, pane: 0, source: 'contextMenu' })!;
@@ -671,7 +671,7 @@ describe('order ticket', () => {
     expect(submission).toMatchObject({
       side: 'buy',
       type: 'limit',
-      symbol: 'ACME',
+      symbol: 'EXAMPLE',
       values: { price: price.price, quantity: 1 },
     });
     resolve({ ok: true, message: 'Order 42 accepted' });

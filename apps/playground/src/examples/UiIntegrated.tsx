@@ -16,7 +16,7 @@ import type { UiPreferences } from '@market-chart/ui';
 import { ChartInterface } from '@market-chart/ui/react';
 import { useDemoChart } from './ui-common';
 
-const SYMBOLS = ['SYN:BTCUSD', 'SYN:ETHUSD', 'SYN:ACME', 'SYN:EURUSD'];
+const SYMBOLS = ['SYN:BTCUSD', 'SYN:ETHUSD', 'SYN:EXAMPLE', 'SYN:EURUSD'];
 const TIMEFRAMES = ['5m', '15m', '1h', '4h', '1D'];
 
 /**

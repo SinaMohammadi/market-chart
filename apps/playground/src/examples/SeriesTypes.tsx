@@ -14,7 +14,7 @@ const modes: PriceScaleMode[] = ['normal', 'logarithmic', 'percentage', 'indexed
 const crosshairs: CrosshairMode[] = ['normal', 'magnet', 'hidden'];
 
 export function SeriesTypesExample() {
-  const bars = dailyBars('ACME', 600);
+  const bars = dailyBars('EXAMPLE', 600);
   const line = useMemo<LinePoint[]>(
     () => bars.map((b) => ({ time: b.time, value: b.close })),
     [bars],
