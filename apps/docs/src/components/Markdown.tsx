@@ -18,8 +18,6 @@ const LINKS: Readonly<Record<string, string>> = {
   'ARCHITECTURE.md': '/guides/architecture',
   'docs/ADVANCED.md': '/guides/advanced',
   'ADVANCED.md': '/guides/advanced',
-  'docs/PUBLISHING.md': '/guides/publishing',
-  'PUBLISHING.md': '/guides/publishing',
   'docs/LEGAL.md': '/license',
   'LEGAL.md': '/license',
   'SECURITY.md': '/guides/security',

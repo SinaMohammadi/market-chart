@@ -24,8 +24,8 @@ settings) in English, Persian and Arabic with full right-to-left support.
 > [`FEATURE_MATRIX.md`](FEATURE_MATRIX.md) lists what is complete, partial or planned, with test status.
 > [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) describes the design, [`docs/ADVANCED.md`](docs/ADVANCED.md)
 > covers extending and integrating the library, [`docs/SSR.md`](docs/SSR.md) server rendering and Next.js,
-> [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) benchmarks and limits, [`SECURITY.md`](SECURITY.md) the
-> security model, and [`docs/PUBLISHING.md`](docs/PUBLISHING.md) deployment and npm releases.
+> [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) benchmarks and limits, and [`SECURITY.md`](SECURITY.md) the
+> security model.
 
 ## Contents
 
@@ -33,7 +33,7 @@ settings) in English, Persian and Arabic with full right-to-left support.
 - [Install](#install)
 - [Quick start](#quick-start): React, vanilla, datafeed, persistence, interface and languages, server rendering
 - [Launch locally](#launch-locally): development, tests, builds
-- [Publish](#publish): GitHub, npm and the documentation site ([full guide](docs/PUBLISHING.md))
+- [Publish](#publish): npm releases
 - [Project layout](#project-layout)
 - [License and disclaimer](#license-and-disclaimer) ([legal notes](docs/LEGAL.md))
 - Further reading: [Advanced guide](docs/ADVANCED.md), [Architecture](docs/ARCHITECTURE.md),
@@ -276,16 +276,9 @@ pnpm build; pnpm typecheck; pnpm test; pnpm lint; pnpm format:check
 
 ## Publish
 
-The complete step-by-step guide is [docs/PUBLISHING.md](docs/PUBLISHING.md): accounts and the npm scope,
-preparing the repository (install, peer-dependency ranges, metadata), GitHub, the first npm release, checking
-the published packages in a new project, later releases with Changesets, CI with npm provenance, and
-deploying the documentation site.
-
-Before the very first publish, do the one-time preparation in the guide: the npm organisation for the
-`@market-chart` scope, `workspace:^` peer ranges and the `repository` fields. Each package tarball contains only
-`dist/`, `README.md`, `LICENSE` and `package.json`.
-
-A release, once that is done:
+Versions and changelogs are managed with [Changesets](https://github.com/changesets/changesets) (`pnpm changeset`,
+then `pnpm changeset version`). Each package tarball contains only `dist/`, `README.md`, `LICENSE` and
+`package.json`. A release:
 
 ```powershell
 pnpm build; pnpm typecheck; pnpm test; pnpm lint
@@ -328,7 +321,6 @@ docs/
   ARCHITECTURE.md  design and technical decisions
   SSR.md           server rendering and Next.js
   PERFORMANCE.md   benchmarks, optimisations, limits
-  PUBLISHING.md    deploy and publish, step by step
   ADVANCED.md      extending and integrating the library
   LEGAL.md         licence, trademarks, disclaimers, privacy, third-party notices
 FEATURE_MATRIX.md  status of every feature and its tests

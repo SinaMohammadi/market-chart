@@ -59,7 +59,6 @@ const docs = {
   ssr: () => import('../../../docs/SSR.md?raw').then((m) => m.default),
   performance: () => import('../../../docs/PERFORMANCE.md?raw').then((m) => m.default),
   architecture: () => import('../../../docs/ARCHITECTURE.md?raw').then((m) => m.default),
-  publishing: () => import('../../../docs/PUBLISHING.md?raw').then((m) => m.default),
   advanced: () => import('../../../docs/ADVANCED.md?raw').then((m) => m.default),
   security: () => import('../../../SECURITY.md?raw').then((m) => m.default),
   status: () => import('../../../FEATURE_MATRIX.md?raw').then((m) => m.default),
@@ -144,15 +143,6 @@ export const PAGES: readonly PageEntry[] = [
       'Threat model, what the library validates, CSP, datafeeds, stored layouts and trading integrations.',
     component: markdownPage(docs.security),
     markdown: docs.security,
-  },
-  {
-    path: '/guides/publishing',
-    title: 'Deploy and publish',
-    section: 'Guides',
-    summary:
-      'GitHub, npm releases with Changesets and provenance, and hosting the documentation site.',
-    component: markdownPage(docs.publishing),
-    markdown: docs.publishing,
   },
   {
     path: '/reference/indicators',

@@ -34,7 +34,7 @@ describe('docs Markdown links (security)', () => {
   it('maps links between repository documents to their documentation pages', () => {
     const cases: [string, string][] = [
       ['docs/ADVANCED.md', '#/guides/advanced'],
-      ['../../docs/PUBLISHING.md#2-prepare-the-repository', '#/guides/publishing'],
+      ['../../docs/ADVANCED.md#9-integrating-trading-safely', '#/guides/advanced'],
       ['LEGAL.md#trading-interfaces', '#/license'],
       ['../../SECURITY.md', '#/guides/security'],
       ['../../docs/PERFORMANCE.md', '#/guides/performance'],

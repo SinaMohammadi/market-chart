@@ -6,7 +6,7 @@ Status legend: **Complete** — implemented, tested, documented · **Partial** �
 Tests legend: **Passed** — automated tests exist and passed in the last verification run ·
 **Manual** — verified by hand in a browser, no automated test yet · **Pending** — no tests yet.
 
-_Last updated: documentation review, legal notes and deployment guide (2026-11-26); before that, symbols, price
+_Last updated: documentation review and legal notes (2026-11-26); before that, symbols, price
 actions and trading objects (2026-11-26). The security review follows; the
 previous verification tables follow the [Security](#security) section._
 
