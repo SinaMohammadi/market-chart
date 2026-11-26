@@ -560,47 +560,20 @@ pages deploy apps/docs/dist`).
 ### Option B: GitHub Pages
 
 GitHub Pages ignores `_headers`; the page still carries its baseline Content-Security-Policy `<meta>` tag
-(`apps/docs/index.html`). Create `.github/workflows/docs.yml`:
+(`apps/docs/index.html`), and github.io always serves HTTPS.
 
-```yaml
-name: Docs
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-concurrency: pages
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm docs:build
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: apps/docs/dist
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
-```
+The repository already contains the workflow,
+[`.github/workflows/docs.yml`](../.github/workflows/docs.yml): on every push to `main` (or when started by hand
+from the _Actions_ tab) it installs with `pnpm install --frozen-lockfile`, runs `pnpm docs:build` and deploys
+`apps/docs/dist` with `actions/deploy-pages`.
 
-Then GitHub → _Settings → Pages → Source_: **GitHub Actions**. The site appears at
-`https://sinamohammadi.github.io/market-chart/`.
+1. GitHub → repository → _Settings → Pages → Build and deployment → Source_: **GitHub Actions** (once).
+2. Push to `main`, or open _Actions → Docs → Run workflow_.
+3. The site appears at `https://sinamohammadi.github.io/market-chart/` (the deployment link is also shown on the
+   workflow run and under _Settings → Pages_).
+
+If the first run fails with "Get Pages site failed" or a 404 from the deploy step, step 1 was not done yet: set the
+source, then re-run the workflow.
 
 ### Check the deployed site
 
