@@ -296,11 +296,11 @@ describe('sanitizeSymbolInfo (security)', () => {
         historyStart: 'yesterday',
         historyEnd: 1e300,
         timeframes: ['1m', 5, 'x'.repeat(100)],
-        exchange: 'SIMEX',
+        exchange: 'EXAMPLE-EX',
       },
       'BTC',
     );
-    expect(info).toEqual({ symbol: 'BTC', exchange: 'SIMEX', timeframes: ['1m'] });
+    expect(info).toEqual({ symbol: 'BTC', exchange: 'EXAMPLE-EX', timeframes: ['1m'] });
     expect(sanitizeSymbolInfo(null, 'ETH')).toEqual({ symbol: 'ETH' });
     expect(
       sanitizeSymbolInfo({ symbol: 'A', historyStart: 10, historyEnd: 5, pricePrecision: 4 }, 'A'),
