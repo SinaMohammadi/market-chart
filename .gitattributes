@@ -1,0 +1,9 @@
+# Text files use LF everywhere (Prettier's default), also on Windows checkouts with core.autocrlf=true.
+* text=auto eol=lf
+
+# Binary files are never converted.
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
