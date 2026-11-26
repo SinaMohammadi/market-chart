@@ -27,10 +27,19 @@ export interface IndicatorResult {
  *   before that bar and re-running one step, so indicators never drift on repeated ticks.
  */
 export class IndicatorRunner<S extends InputSchema = InputSchema> {
+  /** How many trailing bars `rewrite()` can rewind to without a full `reset()`. */
+  static readonly REWIND_BARS = 16;
   readonly definition: IndicatorDefinition<S>;
   readonly params: Params<S>;
   private calculator: IndicatorCalculator;
-  private snapshot: IndicatorCalculator | null = null;
+  /**
+   * Calculator state *before* bar `i`, for the last `REWIND_BARS` bars, at slot `i % REWIND_BARS`
+   * (`snapshotIndex` says which bar a slot belongs to). The latest one backs `updateLast`; the older ones
+   * let corrections of recent bars re-run only the tail. Snapshots are never mutated, only cloned.
+   */
+  private readonly snapshots: (IndicatorCalculator | null)[] =
+    new Array<IndicatorCalculator | null>(IndicatorRunner.REWIND_BARS).fill(null);
+  private readonly snapshotIndex = new Int32Array(IndicatorRunner.REWIND_BARS).fill(-1);
   private _length = 0;
   private times = new Float64Array(64);
   private values: Float64Array[];
@@ -57,16 +66,18 @@ export class IndicatorRunner<S extends InputSchema = InputSchema> {
 
   reset(bars: readonly Bar[]): void {
     this.calculator = this.definition.create(this.params);
-    this.snapshot = null;
+    this.snapshots.fill(null);
+    this.snapshotIndex.fill(-1);
     this._length = 0;
     this.ensureCapacity(bars.length);
+    const keepFrom = bars.length - IndicatorRunner.REWIND_BARS;
     let prev = -Infinity;
     for (let i = 0; i < bars.length; i++) {
       const bar = bars[i]!;
       if (!(bar.time > prev))
         throw new IndicatorError(`bars must be sorted by strictly increasing time (index ${i})`);
       prev = bar.time;
-      if (i === bars.length - 1) this.snapshot = cloneState(this.calculator);
+      if (i >= keepFrom) this.keepSnapshot(i);
       this.write(i, bar, this.calculator.next(bar));
       this._length = i + 1;
     }
@@ -80,18 +91,58 @@ export class IndicatorRunner<S extends InputSchema = InputSchema> {
       );
     }
     this.ensureCapacity(this._length + 1);
-    this.snapshot = cloneState(this.calculator);
+    this.keepSnapshot(this._length);
     this.write(this._length, bar, this.calculator.next(bar));
     this._length++;
   }
 
   updateLast(bar: Bar): void {
-    if (this._length === 0 || !this.snapshot)
+    const snapshot = this.snapshotBefore(this._length - 1);
+    if (this._length === 0 || !snapshot)
       throw new IndicatorError('updateLast() needs at least one bar');
     if (bar.time !== this.lastTime)
       throw new IndicatorError('updateLast() must keep the time of the last bar');
-    this.calculator = cloneState(this.snapshot);
+    this.calculator = cloneState(snapshot);
     this.write(this._length - 1, bar, this.calculator.next(bar));
+  }
+
+  /** True when `rewrite(index, …)` can run (bar `index` is one of the last `REWIND_BARS`). */
+  canRewrite(index: number): boolean {
+    return index >= 0 && index < this._length && this.snapshotBefore(index) !== null;
+  }
+
+  /**
+   * Re-runs bars `index … length - 1` from the state before `index` — a correction of a recent, already
+   * processed bar (O(length − index) steps instead of a full reset). `bars` are the new bars for exactly
+   * those indices, with the same times. Throws (leaving the result unchanged) when that is not the case.
+   */
+  rewrite(index: number, bars: readonly Bar[]): void {
+    const snapshot = this.snapshotBefore(index);
+    if (!snapshot) throw new IndicatorError(`rewrite(): bar ${index} is not one of the last bars`);
+    if (bars.length !== this._length - index)
+      throw new IndicatorError(`rewrite(): expected ${this._length - index} bars`);
+    for (let k = 0; k < bars.length; k++) {
+      if (bars[k]!.time !== this.times[index + k])
+        throw new IndicatorError('rewrite(): bars must keep their times');
+    }
+    this.calculator = cloneState(snapshot);
+    for (let k = 0; k < bars.length; k++) {
+      // The state before every later bar changed too: refresh those snapshots.
+      if (k > 0) this.keepSnapshot(index + k);
+      this.write(index + k, bars[k]!, this.calculator.next(bars[k]!));
+    }
+  }
+
+  private keepSnapshot(index: number): void {
+    const slot = index % IndicatorRunner.REWIND_BARS;
+    this.snapshots[slot] = cloneState(this.calculator);
+    this.snapshotIndex[slot] = index;
+  }
+
+  private snapshotBefore(index: number): IndicatorCalculator | null {
+    if (index < 0) return null;
+    const slot = index % IndicatorRunner.REWIND_BARS;
+    return this.snapshotIndex[slot] === index ? this.snapshots[slot]! : null;
   }
 
   private write(index: number, bar: Bar, output: ArrayLike<number>): void {

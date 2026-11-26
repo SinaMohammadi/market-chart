@@ -141,6 +141,20 @@ export interface VisibleRangeChangeEvent {
   readonly time: TimeRange | null;
 }
 
+/** What `SeriesApi.update()` did with the point: a new last point, an overwrite, or a historical insertion. */
+export type DataUpdateKind = 'appended' | 'replaced' | 'inserted';
+
+export interface DataChangedEvent {
+  readonly series: SeriesApi;
+  /** `set`: `setData` / `setColumns` replaced everything; `update`: one point via `update()`. */
+  readonly kind: 'set' | 'update';
+  /**
+   * For `kind: 'update'`: which point changed. `replaced` may be an older point (a historical correction),
+   * not only the forming bar — compare `time` with the series' last time. Absent for `set`.
+   */
+  readonly update?: { readonly kind: DataUpdateKind; readonly time: number };
+}
+
 /** Series drawn under a context-menu point. */
 export interface ContextMenuSeriesHit {
   readonly series: SeriesApi;
@@ -190,7 +204,7 @@ export interface ChartEventMap {
   paneResize: { readonly heights: readonly number[] };
   seriesAdded: { readonly series: SeriesApi };
   seriesRemoved: { readonly seriesId: string };
-  dataChanged: { readonly series: SeriesApi; readonly kind: 'set' | 'update' };
+  dataChanged: DataChangedEvent;
   optionsChanged: { readonly options: Readonly<ChartOptions> };
   themeChanged: { readonly theme: ChartTheme };
   pluginInstalled: { readonly id: string };

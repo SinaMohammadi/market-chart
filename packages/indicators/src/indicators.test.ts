@@ -266,6 +266,27 @@ describe('every built-in indicator', () => {
       });
     });
 
+    it(`${definition.type}: rewriting recent bars matches batch over the corrected bars`, () => {
+      const runner = new IndicatorRunner(definition);
+      runner.reset(bars.slice(0, 450));
+      for (let i = 450; i < 500; i++) runner.append(bars[i]!);
+      const corrected = bars.slice(0, 500).map((b, i) => (i >= 488 ? tick(b, 7) : b));
+      const from = 500 - IndicatorRunner.REWIND_BARS;
+      expect(runner.canRewrite(from - 1)).toBe(false);
+      expect(runner.canRewrite(from)).toBe(true);
+      runner.rewrite(488, corrected.slice(488));
+      const batch = computeIndicator(definition, corrected);
+      const out = runner.result();
+      batch.values.forEach((values, o) => {
+        const at = firstMismatch(values, out.values[o]!.subarray(0, out.length), 1e-9);
+        if (at >= 0)
+          throw new Error(`${definition.type}.${definition.outputs[o]!.id} differs at ${at}`);
+      });
+      expect(() => runner.rewrite(498, [corrected[499]!, corrected[499]!])).toThrow(
+        /keep their times/,
+      );
+    });
+
     it(`${definition.type}: survives flat prices and zero volume`, () => {
       const flat: Bar[] = Array.from({ length: 120 }, (_, i) => ({
         time: i * HOUR,

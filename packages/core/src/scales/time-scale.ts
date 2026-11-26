@@ -244,13 +244,22 @@ export class TimeScale {
    * Called after the timeline changed. `anchorIndex` is the *new* index of the bar that was last
    * before the change, or -1 when there was no data or the data was replaced entirely.
    *
+   * - `view` given (the latest bar was scrolled out of view): the bar that was at the right edge keeps
+   *   its x. `barsFromEnd` is its distance from the last bar *before* the change, `logical` its index
+   *   *after* the change. Insertions anywhere (before, inside or after the visible range) therefore leave
+   *   the viewed times in place, not only appends.
    * - No anchor: start at the latest bar with default spacing.
    * - Bars appended after the anchor: keep following the latest bar if it was visible
    *   (and `shiftVisibleRangeOnNewBar`), otherwise keep the viewed bars in place.
    * - Bars prepended (history pagination) need no adjustment: offsets are relative to the last bar.
    */
-  handleTimelineChange(anchorIndex: number): void {
-    if (anchorIndex < 0) {
+  handleTimelineChange(
+    anchorIndex: number,
+    view?: { readonly barsFromEnd: number; readonly logical: number },
+  ): void {
+    if (view) {
+      this._rightOffset += view.barsFromEnd - (this.lastIndex - view.logical);
+    } else if (anchorIndex < 0) {
       this._barSpacing = this.clampSpacing(this._options.barSpacing);
       this._rightOffset = this._options.rightOffset;
     } else {

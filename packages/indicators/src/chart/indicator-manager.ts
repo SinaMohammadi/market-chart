@@ -1,6 +1,7 @@
 import { EventEmitter } from '@market-chart/core';
 import type {
   ChartApi,
+  DataChangedEvent,
   LineStyle,
   OhlcBar,
   PaneLayerDrawContext,
@@ -310,11 +311,20 @@ class IndicatorInstance implements IndicatorHandle {
 
   valuesAt(time: number): Readonly<Record<string, number | null>> {
     const { times, values, length } = this.runner.result();
-    const index = lowerBound(times, length, time);
+    let index = lowerBound(times, length, time);
+    if (!(index < length && times[index] === time)) {
+      index = -1;
+      // Past the last bar, outputs with a positive offset are plotted on times extrapolated one bar
+      // interval at a time (see `plottedTime`): invert that to find which bar a future time shows.
+      if (length > 0 && time > times[length - 1]!) {
+        const step = length >= 2 ? times[length - 1]! - times[length - 2]! : DEFAULT_INTERVAL;
+        const ahead = (time - times[length - 1]!) / step;
+        if (Number.isInteger(ahead)) index = length - 1 + ahead;
+      }
+    }
     const out: Record<string, number | null> = {};
     this.definition.outputs.forEach((output, o) => {
-      const source =
-        index < length && times[index] === time ? index - (this.offsets[output.id] ?? 0) : -1;
+      const source = index >= 0 ? index - (this.offsets[output.id] ?? 0) : -1;
       const v = source >= 0 && source < length ? values[o]![source]! : Number.NaN;
       out[output.id] = Number.isFinite(v) ? v : null;
     });
@@ -349,18 +359,34 @@ class IndicatorInstance implements IndicatorHandle {
     this.levelLines = [];
   }
 
-  /** Reacts to a change of the source series. */
-  onSourceChanged(kind: 'set' | 'update'): void {
+  /**
+   * Reacts to a change of the source series. `update` (from the chart's `dataChanged` event) says which
+   * point changed; without it only the last point is assumed to have changed.
+   */
+  onSourceChanged(kind: 'set' | 'update', update?: DataChangedEvent['update']): void {
     if (this._removed) return;
     if (kind === 'set') {
       this.recompute();
       return;
     }
     const lastPoint = this.source.lastPoint();
-    const bar = lastPoint ? toBar(lastPoint) : null;
-    if (!bar) return;
-    const lastTime = this.runner.lastTime;
     const sourceLength = this.source.length();
+    if (update && lastPoint && update.time !== lastPoint.time) {
+      // An older point changed (historical correction or late insertion), not the last one: every value
+      // from that bar on may be different. Recent corrections re-run only the tail.
+      if (update.kind === 'replaced' && this.rewriteFrom(update.time)) return;
+      this.recompute();
+      return;
+    }
+    const bar = lastPoint ? toBar(lastPoint) : null;
+    const lastTime = this.runner.lastTime;
+    if (!bar) {
+      // The last point is whitespace. If it replaced a value, that bar's outputs must go; a new whitespace
+      // point adds no bar but must be counted, so the next value is recognised as a single new bar.
+      if (lastPoint && lastTime !== undefined && lastPoint.time <= lastTime) this.recompute();
+      else this.knownSourceLength = sourceLength;
+      return;
+    }
     if (
       lastTime !== undefined &&
       bar.time === lastTime &&
@@ -370,7 +396,9 @@ class IndicatorInstance implements IndicatorHandle {
       this.pushLast(false);
     } else if (
       (lastTime === undefined || bar.time > lastTime) &&
-      sourceLength === this.knownSourceLength + 1
+      (sourceLength === this.knownSourceLength + 1 ||
+        // A trailing whitespace point that received a value.
+        (update?.kind === 'replaced' && sourceLength === this.knownSourceLength))
     ) {
       this.runner.append(bar);
       this.knownSourceLength = sourceLength;
@@ -502,6 +530,34 @@ class IndicatorInstance implements IndicatorHandle {
     this.runner.reset(bars);
     this.knownSourceLength = this.source.length();
     this.pushAll();
+  }
+
+  /**
+   * Correction of the source bar at `time`, when it is one of the last few computed bars: re-runs only
+   * the bars from there on and pushes just those points. False when a full recomputation is needed (older
+   * bar, or the correction turned a value into whitespace or vice versa).
+   */
+  private rewriteFrom(time: number): boolean {
+    const { times, length } = this.runner.result();
+    const index = lowerBound(times, length, time);
+    if (index >= length || times[index] !== time || !this.runner.canRewrite(index)) return false;
+    const bars: Bar[] = [];
+    for (let i = index; i < length; i++) {
+      const point = this.source.dataAt(times[i]!);
+      const bar = point ? toBar(point) : null;
+      if (!bar) return false;
+      bars.push(bar);
+    }
+    this.runner.rewrite(index, bars);
+    this.definition.outputs.forEach((output, o) => {
+      const series = this.outputSeries.get(output.id) as SeriesApi<'line'> | undefined;
+      if (!series) return;
+      for (let i = index; i < length; i++) {
+        const point = this.pointFor(output, o, i);
+        if (point) series.update(point);
+      }
+    });
+    return true;
   }
 
   /** Time at which bar `index` is plotted for an output with `offset` (extrapolated into the future). */
@@ -743,7 +799,7 @@ export class IndicatorManager {
     this.chart = chart;
     this.registry = registry;
     this.offs.push(
-      chart.on('dataChanged', ({ series, kind }) => {
+      chart.on('dataChanged', ({ series, kind, update }) => {
         // Output series changes re-enter this listener; restore the outer dispatch afterwards.
         const outer = this.shared;
         this.shared = { source: series, bars: null };
@@ -751,7 +807,7 @@ export class IndicatorManager {
           for (const instance of this.instances.values()) {
             if (instance.source !== series) continue;
             try {
-              instance.onSourceChanged(kind);
+              instance.onSourceChanged(kind, update);
             } catch (error) {
               this.emitter.emit('error', { error, id: instance.id });
             }

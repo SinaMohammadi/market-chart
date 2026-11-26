@@ -407,20 +407,28 @@ export class ChartPersistence {
 
   private restoreView(view: { from: number; to: number }): void {
     const chart = this.options.chart;
-    const apply = (): boolean => {
-      if (!chart.series().some((s: SeriesApi) => s.length() > 0)) return false;
+    /** The saved times as a logical range on the timeline as it is now (indices shift with new history). */
+    const resolve = (): { from: number; to: number } | null => {
       const ts = chart.timeScale();
       const from = ts.timeToLogical(view.from);
       const to = ts.timeToLogical(view.to);
-      if (from === null || to === null) return false;
-      const range = { from: from - 0.5, to: to + 0.5 };
+      return from === null || to === null ? null : { from: from - 0.5, to: to + 0.5 };
+    };
+    const apply = (): boolean => {
+      if (!chart.series().some((s: SeriesApi) => s.length() > 0)) return false;
+      const ts = chart.timeScale();
+      const range = resolve();
+      if (!range) return false;
       ts.setVisibleLogicalRange(range);
       // The first frame after new data can widen the price axis, which narrows the pane while keeping the
       // right edge — so the left edge drifts. Re-apply once on that frame (no user input can come in between).
+      // Resolved again from the times: data inserted before that frame (a history page) shifts indices.
       const settle = chart.on('visibleRangeChange', (e) => {
         settle();
-        const drift = Math.abs(e.logical.from - range.from) + Math.abs(e.logical.to - range.to);
-        if (!this.destroyed && drift > 1e-6) ts.setVisibleLogicalRange(range);
+        const target = resolve();
+        if (this.destroyed || !target) return;
+        const drift = Math.abs(e.logical.from - target.from) + Math.abs(e.logical.to - target.to);
+        if (drift > 1e-6) ts.setVisibleLogicalRange(target);
       });
       this.offs.push(settle);
       return true;

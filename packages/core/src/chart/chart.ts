@@ -86,6 +86,15 @@ const MAX_PANES = 32;
 const DAY = 86_400_000;
 const EMPTY_SERIES_DATA: ReadonlyMap<SeriesApi, SeriesData<SeriesType>> = new Map();
 
+/** View state captured before a timeline change (see `ChartImpl.viewAnchor`). */
+interface ViewAnchor {
+  readonly prevLast: number;
+  readonly prevLastTime: number | undefined;
+  /** Index of the bar at the right edge when the latest bar is out of view, otherwise -1. */
+  readonly edgeIndex: number;
+  readonly edgeTime: number;
+}
+
 /** Where the crosshair should be: under the pointer, or at a time/price set through the API (sync). */
 type CrosshairTarget =
   | { readonly kind: 'pointer'; readonly x: number; readonly y: number }
@@ -341,8 +350,7 @@ class ChartImpl implements ChartApi {
   removeSeries(series: SeriesApi): void {
     this.assertAlive();
     const model = this.modelOf(series);
-    const prevLast = this.timeline.lastIndex;
-    const prevLastTime = this.timeline.timeAt(prevLast);
+    const anchor = this.viewAnchor();
     const pane = this._panes[model.options.pane];
     if (pane) {
       pane.series.splice(pane.series.indexOf(model), 1);
@@ -352,7 +360,7 @@ class ChartImpl implements ChartApi {
     this.apis.delete(model);
     this.timeline.remove(model.store);
     this.timeline.rebuild(this.stores());
-    this.afterTimelineChange(prevLast, prevLastTime);
+    this.afterTimelineChange(anchor);
     this.compactPanes();
     this.markCrosshairDirty();
     this.invalidate(Invalidate.All);
@@ -623,11 +631,10 @@ class ChartImpl implements ChartApi {
     replace: () => void,
   ): void {
     this.assertSeries(model);
-    const prevLast = this.timeline.lastIndex;
-    const prevLastTime = this.timeline.timeAt(prevLast);
+    const anchor = this.viewAnchor();
     replace();
     this.timeline.rebuild(this.stores());
-    this.afterTimelineChange(prevLast, prevLastTime);
+    this.afterTimelineChange(anchor);
     this.markCrosshairDirty();
     this.invalidate(Invalidate.Main | Invalidate.Overlay);
     this.emitter.emit('dataChanged', { series: this.apis.get(model)!, kind: 'set' });
@@ -636,18 +643,26 @@ class ChartImpl implements ChartApi {
   updateSeries<T extends SeriesType>(model: SeriesModel<T>, point: SeriesData<T>): void {
     this.assertSeries(model);
     const prevLast = this.timeline.lastIndex;
-    const prevLastTime = this.timeline.timeAt(prevLast);
+    const prevVersion = this.timeline.version;
+    // Cheap (no allocation beyond one small object); only consulted when the timeline changes.
+    const anchor = this.viewAnchor();
     const result = model.update(point);
     if (result.kind === 'appended') {
       if (!this.timeline.appendFrom(model.store)) this.timeline.rebuild(this.stores());
     } else if (result.kind === 'inserted') {
       this.timeline.rebuild(this.stores());
     }
-    if (this.timeline.lastIndex !== prevLast || result.kind === 'inserted')
-      this.afterTimelineChange(prevLast, prevLastTime);
+    // A rebuild (insertion, or an append whose time lies inside the timeline) may shift existing indices.
+    if (this.timeline.lastIndex !== prevLast || this.timeline.version !== prevVersion)
+      this.afterTimelineChange(anchor);
     this.markCrosshairDirty();
     this.invalidate(Invalidate.Main | Invalidate.Overlay);
-    this.emitter.emit('dataChanged', { series: this.apis.get(model)!, kind: 'update' });
+    const time = model.store.times[result.index]!;
+    this.emitter.emit('dataChanged', {
+      series: this.apis.get(model)!,
+      kind: 'update',
+      update: { kind: result.kind, time },
+    });
   }
 
   applySeriesOptions<T extends SeriesType>(
@@ -780,12 +795,51 @@ class ChartImpl implements ChartApi {
     });
   }
 
-  private afterTimelineChange(prevLast: number, prevLastTime: number | undefined): void {
-    if (prevLast < 0 || prevLastTime === undefined) {
-      this._timeScale.handleTimelineChange(-1);
+  /**
+   * Captures, before a timeline change, what keeps the view in place afterwards: the time of the last
+   * bar and — when the latest bar is scrolled out of view — the time of the bar at the right edge.
+   * Times, not indices: indices of existing bars shift when timestamps are inserted before them.
+   */
+  private viewAnchor(): ViewAnchor {
+    const timeline = this.timeline;
+    const prevLast = timeline.lastIndex;
+    const ts = this._timeScale;
+    let edgeIndex = -1;
+    // rightOffset < -0.5: the latest bar's centre is right of the pane's right edge.
+    if (prevLast >= 0 && ts.width > 0 && ts.rightOffset < -0.5) {
+      const edge = Math.floor(ts.visibleLogicalRange().to - 0.5);
+      edgeIndex = Math.min(prevLast, Math.max(0, edge));
+    }
+    return {
+      prevLast,
+      prevLastTime: timeline.timeAt(prevLast),
+      edgeIndex,
+      edgeTime: edgeIndex >= 0 ? timeline.timeAt(edgeIndex)! : 0,
+    };
+  }
+
+  private afterTimelineChange(anchor: ViewAnchor): void {
+    const ts = this._timeScale;
+    if (anchor.prevLast < 0 || anchor.prevLastTime === undefined || this.timeline.length === 0) {
+      ts.handleTimelineChange(-1);
       return;
     }
-    this._timeScale.handleTimelineChange(this.timeline.indexOf(prevLastTime));
+    if (anchor.edgeIndex >= 0) {
+      // Exact index when the edge bar still exists, otherwise its interpolated position.
+      const exact = this.timeline.indexOf(anchor.edgeTime);
+      const logical = exact >= 0 ? exact : timeToLogical(this.timeline, anchor.edgeTime);
+      if (logical !== null && logical >= 0 && logical <= this.timeline.lastIndex) {
+        ts.handleTimelineChange(-1, { barsFromEnd: anchor.prevLast - anchor.edgeIndex, logical });
+        return;
+      }
+      // The viewed times are no longer covered (data replaced by another range): start over.
+      ts.handleTimelineChange(-1);
+      return;
+    }
+    const lastIndex = this.timeline.indexOf(anchor.prevLastTime);
+    // The latest bar was in view. If its time is gone (the series that held it was shortened or replaced),
+    // keep following the new latest bar with the current zoom rather than resetting the view.
+    ts.handleTimelineChange(lastIndex >= 0 ? lastIndex : this.timeline.lastIndex);
   }
 
   private commitOptions(prev: ChartOptions, next: ChartOptions): void {

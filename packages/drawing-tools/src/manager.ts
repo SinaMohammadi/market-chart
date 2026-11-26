@@ -126,13 +126,15 @@ export class DrawingManager {
   private readonly layerPanes = new Set<number>();
   private readonly emitter = new EventEmitter<DrawingManagerEvents>();
   private readonly dataVersions = new Map<string, number>();
+  /**
+   * Data-derived values per drawing. `probes` are (time, logical index) pairs of the first and last data
+   * points the computation read: derived values are in logical coordinates, which shift when any series
+   * inserts or removes timestamps before or inside the range, so a cached value is only reused while
+   * those points are still at the same logical positions.
+   */
   private readonly derivedCache = new Map<
     string,
-    { drawing: Drawing; version: number; value: unknown }
-  >();
-  private readonly valuesCache = new Map<
-    string,
-    { version: number; times: number[]; values: number[]; logical: number[] }
+    { drawing: Drawing; version: number; value: unknown; probes: readonly number[] }
   >();
   private readonly formatters = new WeakMap<object, PriceFormatterFn>();
   private idCounter = 0;
@@ -650,33 +652,38 @@ export class DrawingManager {
     };
   }
 
-  private dataAccess(series: SeriesApi): DrawingDataAccess {
+  /**
+   * Values of `series` between two times, read bar by bar along the chart's timeline (by time, so other
+   * series' timestamps never shift them): O(m log n) for the m bars in range, without copying the series.
+   * Pushes (time, logical) of the first and last point read onto `probes`.
+   */
+  private dataAccess(series: SeriesApi, probes: number[]): DrawingDataAccess {
     return {
       values: (from, to) => {
-        const version = this.dataVersions.get(series.id) ?? 0;
-        let cache = this.valuesCache.get(series.id);
-        if (!cache || cache.version !== version) {
-          const ts = this.chart.timeScale();
-          const times: number[] = [];
-          const values: number[] = [];
-          const logical: number[] = [];
-          for (const point of series.data()) {
-            const p = point as { time: number; close?: number; value?: number };
-            const v = p.close ?? p.value;
-            const l = ts.timeToLogical(p.time);
-            if (typeof v !== 'number' || !Number.isFinite(v) || l === null) continue;
-            times.push(p.time);
-            values.push(v);
-            logical.push(l);
-          }
-          cache = { version, times, values, logical };
-          this.valuesCache.set(series.id, cache);
+        const logical: number[] = [];
+        const value: number[] = [];
+        const ts = this.chart.timeScale();
+        const last = series.lastPoint();
+        const a = ts.timeToLogical(from);
+        const b = last ? ts.timeToLogical(Math.min(to, last.time)) : null;
+        if (a === null || b === null) return { logical, value };
+        for (let i = Math.max(0, Math.ceil(a)); i <= Math.floor(b); i++) {
+          const time = ts.logicalToTime(i);
+          if (time === null || time < from) continue;
+          const p = series.dataAt(time) as { close?: number; value?: number } | undefined;
+          const v = p?.close ?? p?.value;
+          if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+          logical.push(i);
+          value.push(v);
         }
-        let lo = 0;
-        while (lo < cache.times.length && cache.times[lo]! < from) lo++;
-        let hi = lo;
-        while (hi < cache.times.length && cache.times[hi]! <= to) hi++;
-        return { logical: cache.logical.slice(lo, hi), value: cache.values.slice(lo, hi) };
+        if (logical.length) {
+          probes.push(ts.logicalToTime(logical[0]!)!, logical[0]!);
+          probes.push(
+            ts.logicalToTime(logical[logical.length - 1]!)!,
+            logical[logical.length - 1]!,
+          );
+        }
+        return { logical, value };
       },
     };
   }
@@ -685,9 +692,16 @@ export class DrawingManager {
     if (!tool.compute) return undefined;
     const version = this.dataVersions.get(series.id) ?? 0;
     const cached = this.derivedCache.get(drawing.id);
-    if (cached && cached.drawing === drawing && cached.version === version) return cached.value;
-    const value = tool.compute(drawing, this.dataAccess(series));
-    this.derivedCache.set(drawing.id, { drawing, version, value });
+    if (cached && cached.drawing === drawing && cached.version === version) {
+      const ts = this.chart.timeScale();
+      let valid = true;
+      for (let k = 0; k < cached.probes.length && valid; k += 2)
+        valid = ts.timeToLogical(cached.probes[k]!) === cached.probes[k + 1]!;
+      if (valid) return cached.value;
+    }
+    const probes: number[] = [];
+    const value = tool.compute(drawing, this.dataAccess(series, probes));
+    this.derivedCache.set(drawing.id, { drawing, version, value, probes });
     return value;
   }
 
@@ -765,7 +779,7 @@ export class DrawingManager {
     try {
       const derived =
         isDraft && tool.compute
-          ? tool.compute(drawing, this.dataAccess(series))
+          ? tool.compute(drawing, this.dataAccess(series, []))
           : this.derived(drawing, tool, series);
       tool.draw(ctx, drawing, view, { selected, hovered: this.hovered === drawing.id }, derived);
     } catch (error) {

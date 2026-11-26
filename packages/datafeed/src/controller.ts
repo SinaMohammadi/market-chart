@@ -128,6 +128,8 @@ export class DatafeedController {
   private hasMore = true;
   private cursor = Number.NaN;
   private emptyPages = 0;
+  /** Incremented when the oldest bars are dropped; history pages requested before are discarded. */
+  private historyEpoch = 0;
   private destroyed = false;
 
   constructor(chart: ChartApi, series: SeriesApi, options: DatafeedControllerOptions) {
@@ -135,7 +137,11 @@ export class DatafeedController {
     this.series = series;
     this.options = options;
     this.offRange = chart.on('visibleRangeChange', (e) => {
-      if (this._status === 'ready' && e.logical.from < (this.options.loadMoreThreshold ?? 10))
+      if (this._status !== 'ready' || !this.candles.length) return;
+      // Logical indices are positions on the chart's shared timeline, which other series (comparison
+      // symbols, displaced indicator outputs) may extend: measure from this series' own first bar.
+      const first = chart.timeScale().timeToLogical(this.candles[0]!.time);
+      if (first !== null && e.logical.from < first + (this.options.loadMoreThreshold ?? 10))
         void this.loadMore();
     });
     void this.load();
@@ -183,6 +189,7 @@ export class DatafeedController {
     if (this.destroyed || this._status !== 'ready' || !this.hasMore || !this.candles.length)
       return 0;
     const generation = this.generation;
+    const epoch = this.historyEpoch;
     const { datafeed, symbol, interval } = this.options;
     const step = parseTimeframe(interval).ms;
     const chunk = this.options.chunkBars ?? 300;
@@ -197,6 +204,12 @@ export class DatafeedController {
     try {
       const raw = await datafeed.getHistoricalData(symbol, interval, { from, to });
       if (generation !== this.generation || this.stopIfChartGone()) return 0;
+      if (epoch !== this.historyEpoch || !this.candles.length) {
+        // Bars were trimmed meanwhile: this page ends before the new first bar. Drop it; scrolling back
+        // requests the right range again.
+        this.setStatus('ready');
+        return 0;
+      }
       const older = normalizeCandles(raw).candles.filter((c) => c.time < this.candles[0]!.time);
       this.cursor = from;
       if (!older.length) {
@@ -338,9 +351,14 @@ export class DatafeedController {
     const slack = Math.max(1, Math.floor(max * 0.1));
     const excess = this.candles.length - max;
     if (excess < slack) return;
-    const visible = this.chart.timeScale().getVisibleLogicalRange();
-    if (visible && visible.from < excess) return; // the user is looking at bars that would go
+    const ts = this.chart.timeScale();
+    const visible = ts.getVisibleLogicalRange();
+    // The first bar that would be kept, on the shared timeline (not `excess`: other series may add bars).
+    const keep = ts.timeToLogical(this.candles[excess]!.time);
+    if (visible && keep !== null && visible.from < keep) return; // the user is looking at bars that would go
     this.candles = this.candles.slice(excess);
+    // A history page requested before the trim would leave a gap between itself and the kept bars.
+    this.historyEpoch++;
     this.cursor = Number.NaN;
     this.hasMore = true;
     this.emptyPages = 0;

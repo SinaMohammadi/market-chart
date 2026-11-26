@@ -12,6 +12,8 @@ export type {
   ContextMenuEvent,
   ContextMenuSeriesHit,
   CrosshairMoveEvent,
+  DataChangedEvent,
+  DataUpdateKind,
   PaneApi,
   PriceScaleApi,
   SeriesApi,
