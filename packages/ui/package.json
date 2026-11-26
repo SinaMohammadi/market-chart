@@ -66,9 +66,9 @@
     "@testing-library/react": "^16.3.0"
   },
   "peerDependencies": {
-    "@market-chart/drawing-tools": "workspace:*",
-    "@market-chart/indicators": "workspace:*",
-    "@market-chart/react": "workspace:*",
+    "@market-chart/drawing-tools": "workspace:^",
+    "@market-chart/indicators": "workspace:^",
+    "@market-chart/react": "workspace:^",
     "react": ">=18.0.0"
   },
   "peerDependenciesMeta": {

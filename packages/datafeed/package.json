@@ -61,7 +61,7 @@
     "@market-chart/react": "workspace:*"
   },
   "peerDependencies": {
-    "@market-chart/react": "workspace:*",
+    "@market-chart/react": "workspace:^",
     "react": ">=18.0.0"
   },
   "peerDependenciesMeta": {
