@@ -1,0 +1,88 @@
+{
+  "name": "@market-chart/trading",
+  "version": "0.1.0",
+  "description": "The application's orders, positions, alerts and custom markers drawn at their prices on a @market-chart chart, with drag-to-modify, cancel, context menus and an object-tree section. Display only: it never trades.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SinaMohammadi/market-chart.git",
+    "directory": "packages/trading"
+  },
+  "homepage": "https://github.com/SinaMohammadi/market-chart/tree/main/packages/trading#readme",
+  "bugs": {
+    "url": "https://github.com/SinaMohammadi/market-chart/issues"
+  },
+  "keywords": [
+    "chart",
+    "charting",
+    "financial-chart",
+    "candlestick",
+    "trading-chart",
+    "canvas",
+    "typescript",
+    "orders",
+    "positions",
+    "order-lines"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+    "test": "vitest run --project trading"
+  },
+  "dependencies": {
+    "@market-chart/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@market-chart/i18n": "workspace:*",
+    "@market-chart/react": "workspace:*",
+    "@market-chart/testing": "workspace:*",
+    "@market-chart/ui": "workspace:*",
+    "@testing-library/react": "^16.3.0"
+  },
+  "peerDependencies": {
+    "@market-chart/i18n": "workspace:*",
+    "@market-chart/react": "workspace:*",
+    "@market-chart/ui": "workspace:*",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@market-chart/i18n": {
+      "optional": true
+    },
+    "@market-chart/react": {
+      "optional": true
+    },
+    "@market-chart/ui": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

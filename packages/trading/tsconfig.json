@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "types": []
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../core" },
+    { "path": "../i18n" },
+    { "path": "../ui" },
+    { "path": "../react" }
+  ],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
+}

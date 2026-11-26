@@ -1,0 +1,108 @@
+:root {
+  color-scheme: dark;
+  --bg: #0f1218;
+  --panel: #151a22;
+  --border: #252b36;
+  --text: #d1d4dc;
+  --muted: #8a919e;
+  --accent: #2962ff;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    14px/1.5 system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+header a {
+  color: var(--text);
+  text-decoration: none;
+}
+header a:hover {
+  color: #fff;
+}
+header span {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+main {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+h1 {
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+p.lead {
+  color: var(--muted);
+  margin: 0 0 20px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.tile,
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.tile h2 {
+  font-size: 14px;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+}
+.up {
+  color: #26a69a;
+}
+.down {
+  color: #ef5350;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+.toolbar button,
+.toolbar select {
+  background: #1b1f29;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.toolbar button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: #1d2a52;
+  color: #fff;
+}
+.badge {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #2a2e39;
+  color: var(--muted);
+}

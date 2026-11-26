@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "types": [],
+    "paths": {
+      "@market-chart/core": ["../../packages/core/src/index.ts"],
+      "@market-chart/core/static": ["../../packages/core/src/static/index.ts"],
+      "@market-chart/react": ["../../packages/react/src/index.ts"],
+      "@market-chart/react/ssr": ["../../packages/react/src/ssr/index.ts"],
+      "@market-chart/testing": ["../../packages/testing/src/index.ts"],
+      "@market-chart/indicators": ["../../packages/indicators/src/index.ts"],
+      "@market-chart/indicators/react": ["../../packages/indicators/src/react/index.ts"],
+      "@market-chart/drawing-tools": ["../../packages/drawing-tools/src/index.ts"],
+      "@market-chart/drawing-tools/react": ["../../packages/drawing-tools/src/react/index.ts"],
+      "@market-chart/charts": ["../../packages/charts/src/index.ts"],
+      "@market-chart/datafeed": ["../../packages/datafeed/src/index.ts"],
+      "@market-chart/datafeed/react": ["../../packages/datafeed/src/react/index.ts"],
+      "@market-chart/persistence": ["../../packages/persistence/src/index.ts"],
+      "@market-chart/persistence/react": ["../../packages/persistence/src/react/index.ts"],
+      "@market-chart/i18n": ["../../packages/i18n/src/index.ts"],
+      "@market-chart/ui": ["../../packages/ui/src/index.ts"],
+      "@market-chart/ui/react": ["../../packages/ui/src/react/index.ts"],
+      "@market-chart/trading": ["../../packages/trading/src/index.ts"],
+      "@market-chart/trading/react": ["../../packages/trading/src/react/index.ts"]
+    }
+  },
+  "include": ["src"]
+}
