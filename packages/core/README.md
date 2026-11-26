@@ -14,7 +14,10 @@ const chart = createChart(container, {
 const candles = chart.addSeries('candlestick', { title: 'BTCUSDT' });
 candles.setData(bars); // [{ time: UTC ms, open, high, low, close, volume? }]
 
-const volume = chart.addSeries('histogram', { priceScaleId: 'volume', priceFormat: { type: 'volume' } });
+const volume = chart.addSeries('histogram', {
+  priceScaleId: 'volume',
+  priceFormat: { type: 'volume' },
+});
 chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
 
 const rsi = chart.addSeries('line', { pane: 1, color: '#7e57c2' }); // new pane below
@@ -118,9 +121,9 @@ Everything a plugin registers is removed with `chart.removePlugin(id)` or `chart
 
 Shared by the datafeed and persistence adapters, and useful in your own code (see [SECURITY.md](../../SECURITY.md)):
 
-| Export | Purpose |
-|---|---|
-| `buildUrl(template, params)` | Builds a URL with every value encoded: `{name}` placeholders are path-encoded, other params become the query string. Use it instead of concatenating symbols or ids. |
-| `redactUrl(url)` | The URL without credentials, query string or fragment, for error messages and logs. |
-| `readTextLimited(response, maxBytes)` / `readJsonLimited` | Read a `fetch` response body with a size limit (`Content-Length` and streaming); throw `ResponseTooLargeError`. |
-| `safePrecision(value, fallback)` | Clamps an untrusted price precision to an integer in [0, 20]. `createPriceFormatter` now does this itself and ignores a non-positive `minMove`, so a bad `precision` from a datafeed or stored layout can no longer make every frame throw. |
+| Export                                                    | Purpose                                                                                                                                                                                                                                     |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildUrl(template, params)`                              | Builds a URL with every value encoded: `{name}` placeholders are path-encoded, other params become the query string. Use it instead of concatenating symbols or ids.                                                                        |
+| `redactUrl(url)`                                          | The URL without credentials, query string or fragment, for error messages and logs.                                                                                                                                                         |
+| `readTextLimited(response, maxBytes)` / `readJsonLimited` | Read a `fetch` response body with a size limit (`Content-Length` and streaming); throw `ResponseTooLargeError`.                                                                                                                             |
+| `safePrecision(value, fallback)`                          | Clamps an untrusted price precision to an integer in [0, 20]. `createPriceFormatter` now does this itself and ignores a non-positive `minMove`, so a bad `precision` from a datafeed or stored layout can no longer make every frame throw. |

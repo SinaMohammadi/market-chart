@@ -140,7 +140,8 @@ export const PAGES: readonly PageEntry[] = [
     path: '/guides/security',
     title: 'Security',
     section: 'Guides',
-    summary: 'Threat model, what the library validates, CSP, datafeeds, stored layouts and trading integrations.',
+    summary:
+      'Threat model, what the library validates, CSP, datafeeds, stored layouts and trading integrations.',
     component: markdownPage(docs.security),
     markdown: docs.security,
   },
@@ -148,7 +149,8 @@ export const PAGES: readonly PageEntry[] = [
     path: '/guides/publishing',
     title: 'Deploy and publish',
     section: 'Guides',
-    summary: 'GitHub, npm releases with Changesets and provenance, and hosting the documentation site.',
+    summary:
+      'GitHub, npm releases with Changesets and provenance, and hosting the documentation site.',
     component: markdownPage(docs.publishing),
     markdown: docs.publishing,
   },

@@ -12,7 +12,11 @@ Times are **UTC milliseconds**. Nothing touches the network, `WebSocket` or `Eve
 interface Datafeed {
   searchSymbols?(query: string): Promise<SymbolInfo[]>;
   resolveSymbol(symbol: string): Promise<SymbolInfo>;
-  getHistoricalData(symbol: string, interval: Timeframe, range: { from: number; to: number }): Promise<Candle[]>;
+  getHistoricalData(
+    symbol: string,
+    interval: Timeframe,
+    range: { from: number; to: number },
+  ): Promise<Candle[]>;
   subscribe(symbol: string, interval: Timeframe, callback: (candle: Candle) => void): Unsubscribe;
   unsubscribe?(subscriptionId: string): void;
   destroy?(): void;
@@ -30,11 +34,17 @@ Monday (UTC); months follow the calendar.
 
 ```ts
 import { createChart } from '@market-chart/core';
-import { DatafeedController, buildUrl, createRestDatafeed, createWebSocketDatafeed } from '@market-chart/datafeed';
+import {
+  DatafeedController,
+  buildUrl,
+  createRestDatafeed,
+  createWebSocketDatafeed,
+} from '@market-chart/datafeed';
 
 const history = createRestDatafeed({
   // buildUrl encodes every value: a symbol such as `BTC/USD&x=1` cannot change the path or add parameters.
-  history: ({ symbol, interval, from, to }) => buildUrl('/api/candles', { symbol, tf: interval, from, to }),
+  history: ({ symbol, interval, from, to }) =>
+    buildUrl('/api/candles', { symbol, tf: interval, from, to }),
   maxBarsPerRequest: 1000, // long ranges are split into several requests
   // Same-origin API: cookies are sent (the default 'same-origin'). Never put secret API keys in browser code:
   // proxy third-party APIs through your server and authenticate the user there.
@@ -44,15 +54,20 @@ const feed = createWebSocketDatafeed({
   history,
   subscribeMessage: (symbol, interval) => ({ op: 'subscribe', symbol, interval }),
   unsubscribeMessage: (symbol, interval) => ({ op: 'unsubscribe', symbol, interval }),
-  parseMessage: (m: any) => (m.type === 'candle' ? [{ symbol: m.symbol, interval: m.interval, candle: m.k }] : null),
+  parseMessage: (m: any) =>
+    m.type === 'candle' ? [{ symbol: m.symbol, interval: m.interval, candle: m.k }] : null,
   heartbeat: { message: { op: 'ping' }, intervalMs: 20_000 },
 });
 
 const chart = createChart(element);
 const candles = chart.addSeries('candlestick');
-const controller = new DatafeedController(chart, candles, { datafeed: feed, symbol: 'BTCUSD', interval: '1h' });
+const controller = new DatafeedController(chart, candles, {
+  datafeed: feed,
+  symbol: 'BTCUSD',
+  interval: '1h',
+});
 controller.on('status', ({ status }) => console.log(status)); // loading → ready, loading-more, error
-await controller.setSymbol('ETHUSD', '15m');                  // late responses for the old symbol are ignored
+await controller.setSymbol('ETHUSD', '15m'); // late responses for the old symbol are ignored
 controller.destroy();
 ```
 
@@ -70,25 +85,25 @@ The controller:
 
 ## Adapters
 
-| Adapter | Use |
-|---|---|
-| `createStaticDatafeed({ SYMBOL: { candles, timeframe } })` | Fixtures, imported files, tests. Larger multiples are resampled on request (1m → 15m, 1D → 1W/1M). `push()` feeds realtime bars. |
-| `createRestDatafeed({ history, resolve?, search?, … })` | Any HTTP API: URL builders and response parsers, chunking, retries on network errors / 429 / 5xx with exponential backoff, timeouts. 4xx errors are not retried. |
-| `createWebSocketDatafeed({ url, subscribeMessage, parseMessage, … })` | One shared socket, reference-counted subscriptions, resubscription after reconnect, exponential backoff, heartbeat, connection `status()`. |
-| `createSseDatafeed({ url, parse?, eventName? })` | Server-Sent Events (the browser reconnects by itself). |
-| `composeDatafeed({ history, realtime })` | History from one source, realtime from another. |
-| `createSyntheticDatafeed(options?)` | **Synthetic** prices for demos and tests: deterministic, unlimited history, consistent across pages and intervals, simulated latency, gaps and realtime ticks. Not real market data. |
+| Adapter                                                               | Use                                                                                                                                                                                  |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `createStaticDatafeed({ SYMBOL: { candles, timeframe } })`            | Fixtures, imported files, tests. Larger multiples are resampled on request (1m → 15m, 1D → 1W/1M). `push()` feeds realtime bars.                                                     |
+| `createRestDatafeed({ history, resolve?, search?, … })`               | Any HTTP API: URL builders and response parsers, chunking, retries on network errors / 429 / 5xx with exponential backoff, timeouts. 4xx errors are not retried.                     |
+| `createWebSocketDatafeed({ url, subscribeMessage, parseMessage, … })` | One shared socket, reference-counted subscriptions, resubscription after reconnect, exponential backoff, heartbeat, connection `status()`.                                           |
+| `createSseDatafeed({ url, parse?, eventName? })`                      | Server-Sent Events (the browser reconnects by itself).                                                                                                                               |
+| `composeDatafeed({ history, realtime })`                              | History from one source, realtime from another.                                                                                                                                      |
+| `createSyntheticDatafeed(options?)`                                   | **Synthetic** prices for demos and tests: deterministic, unlimited history, consistent across pages and intervals, simulated latency, gaps and realtime ticks. Not real market data. |
 
 A custom provider is any object implementing `Datafeed`.
 
 ## Files and data utilities
 
 ```ts
-const { candles, dropped, duplicates } = parseCsv(text);   // header aliases, quotes, ; , tab | delimiters
-parseJsonCandles(json);                                     // arrays of objects/arrays, or { candles | data | bars }
-await parseCandleFile(file);                                // a File from <input type="file">, CSV or JSON
+const { candles, dropped, duplicates } = parseCsv(text); // header aliases, quotes, ; , tab | delimiters
+parseJsonCandles(json); // arrays of objects/arrays, or { candles | data | bars }
+await parseCandleFile(file); // a File from <input type="file">, CSV or JSON
 
-normalizeCandles(rows);           // seconds/ms/ISO times, string numbers, sorting, duplicates (last wins), high/low repair
+normalizeCandles(rows); // seconds/ms/ISO times, string numbers, sorting, duplicates (last wins), high/low repair
 resampleCandles(candles, '1W');
 fillMissingCandles(candles, '1m');
 mergeCandles(older, newer);
@@ -105,7 +120,12 @@ import { Chart } from '@market-chart/react';
 import { DatafeedSeries, useDatafeed } from '@market-chart/datafeed/react';
 
 <Chart height={500}>
-  <DatafeedSeries datafeed={feed} symbol={symbol} interval={interval} onStateChange={(s) => setStatus(s.status)} />
+  <DatafeedSeries
+    datafeed={feed}
+    symbol={symbol}
+    interval={interval}
+    onStateChange={(s) => setStatus(s.status)}
+  />
 </Chart>;
 ```
 

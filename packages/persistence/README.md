@@ -29,12 +29,12 @@ const persistence = new ChartPersistence({
     drawings: drawingsProvider(getDrawingManager(chart), () => candles.id),
   },
   getContext: () => ({ symbol: controller.symbol, interval: controller.interval }),
-  debounceMs: 1000,      // autosave after a quiet period (autoSave: false for manual saves)
+  debounceMs: 1000, // autosave after a quiet period (autoSave: false for manual saves)
   conflict: 'overwrite', // or 'reload', 'fail' (default), or (local, remote) => merged
 });
-persistence.on('status', ({ status }) => badge.textContent = status); // idle · dirty · saving · saved · error · conflict
-await persistence.load();          // false when nothing is stored yet
-await persistence.save();          // skipped when nothing changed
+persistence.on('status', ({ status }) => (badge.textContent = status)); // idle · dirty · saving · saved · error · conflict
+await persistence.load(); // false when nothing is stored yet
+await persistence.save(); // skipped when nothing changed
 const json = persistence.exportJson();
 await persistence.importJson(text); // validated, applied, then saved as the next revision
 persistence.destroy();
@@ -47,14 +47,14 @@ UI settings…) can be added with `valueProvider(get, set)`.
 
 ## Storage adapters
 
-| Adapter | Notes |
-|---|---|
-| `createMemoryStorage()` | Tests, SSR, ephemeral sessions |
-| `createLocalStorage({ prefix })` / `createSessionStorage()` | Keeps a small metadata index for `list()`; quota errors become `StorageQuotaError` |
-| `createWebStorage({ storage: () => myStorage })` | Any `getItem`/`setItem`/`removeItem` object |
-| `createIndexedDbStorage({ dbName, storeName })` | Larger quota; the revision check and write run in one transaction |
-| `createRestStorage({ baseUrl, headers, fetch })` | `GET/PUT/DELETE <baseUrl>/<id>`, `GET <baseUrl>` lists. Writes send `If-Match: <previous revision>`; `409`/`412` becomes a `StorageConflictError` with the server's state |
-| custom | Implement `StorageAdapter<T>`: `save`, `load`, `delete`, `list` |
+| Adapter                                                     | Notes                                                                                                                                                                     |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createMemoryStorage()`                                     | Tests, SSR, ephemeral sessions                                                                                                                                            |
+| `createLocalStorage({ prefix })` / `createSessionStorage()` | Keeps a small metadata index for `list()`; quota errors become `StorageQuotaError`                                                                                        |
+| `createWebStorage({ storage: () => myStorage })`            | Any `getItem`/`setItem`/`removeItem` object                                                                                                                               |
+| `createIndexedDbStorage({ dbName, storeName })`             | Larger quota; the revision check and write run in one transaction                                                                                                         |
+| `createRestStorage({ baseUrl, headers, fetch })`            | `GET/PUT/DELETE <baseUrl>/<id>`, `GET <baseUrl>` lists. Writes send `If-Match: <previous revision>`; `409`/`412` becomes a `StorageConflictError` with the server's state |
+| custom                                                      | Implement `StorageAdapter<T>`: `save`, `load`, `delete`, `list`                                                                                                           |
 
 Every adapter validates on read and rejects a write whose `revision` is not newer than the stored one
 (`StorageConflictError`). That is how concurrent edits from another tab or device are detected.
@@ -80,12 +80,14 @@ configured strategy.
 ## Workspaces
 
 ```ts
-const store = new WorkspaceStore(createLocalStorage<WorkspaceState>({ prefix: 'ws:', validate: validateWorkspace }));
+const store = new WorkspaceStore(
+  createLocalStorage<WorkspaceState>({ prefix: 'ws:', validate: validateWorkspace }),
+);
 const ws = await store.create('Morning', { layout: '2x1', charts: [persistence.capture()] });
 await store.rename(ws.id, 'Morning session');
 await store.duplicate(ws.id);
 const json = await store.exportJson(ws.id);
-await store.importJson(json);            // new id, everything validated
+await store.importJson(json); // new id, everything validated
 await store.save(upsertWatchlist(ws, { id: 'fav', name: 'Favourites', symbols: ['BTCUSD'] }));
 ```
 

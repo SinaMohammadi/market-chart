@@ -11,12 +11,12 @@ The chart interface layer:
 The menus and both toolbars show actions from **one action registry**. Every text comes from
 `@market-chart/i18n`, and the whole interface mirrors in right-to-left languages.
 
-| Entry | Contents |
-|---|---|
-| `@market-chart/ui` | Headless and framework-independent: `ChartUi`, the action registry, the menu controller, layout, positioning, preferences, built-in actions, icons. No React, no DOM at import time |
+| Entry                    | Contents                                                                                                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@market-chart/ui`       | Headless and framework-independent: `ChartUi`, the action registry, the menu controller, layout, positioning, preferences, built-in actions, icons. No React, no DOM at import time  |
 | `@market-chart/ui/react` | Client-only React renderers: `<ChartInterface>`, `<ChartHeader>`, `<ChartSidebar>`, `<ChartContextMenu>`, `<ChartSettings>`, dialogs, panels, and the headless hook `useContextMenu` |
 
-The engine stays UI-free. `@market-chart/core` only reports *what* was right-clicked through its
+The engine stays UI-free. `@market-chart/core` only reports _what_ was right-clicked through its
 `contextMenu` event. This package decides what to offer. Drawing and indicator features call the existing
 `DrawingManager` and `IndicatorManager` APIs, which are optional peer dependencies.
 
@@ -33,7 +33,8 @@ import { ChartInterface, useChartUi } from '@market-chart/ui/react';
 function TradingChart({ bars }) {
   const [chart, setChart] = useState<ChartApi | null>(null);
   const capabilities = useMemo(
-    () => (chart ? { drawings: getDrawingManager(chart), indicators: getIndicatorManager(chart) } : {}),
+    () =>
+      chart ? { drawings: getDrawingManager(chart), indicators: getIndicatorManager(chart) } : {},
     [chart],
   );
   const ui = useChartUi(chart, { capabilities });
@@ -47,7 +48,9 @@ function TradingChart({ bars }) {
 }
 
 export const App = () => (
-  <ChartProvider locale="fa">   {/* language and direction for everything below */}
+  <ChartProvider locale="fa">
+    {' '}
+    {/* language and direction for everything below */}
     <TradingChart bars={bars} />
   </ChartProvider>
 );
@@ -70,8 +73,8 @@ Without React:
 import { createChartUi } from '@market-chart/ui';
 
 const ui = createChartUi(chart, { capabilities: { drawings, indicators } });
-ui.menu.on('change', ({ state }) => renderMyMenu(state));   // render with any framework
-const offKeys = ui.bindKeyboard();                          // shortcuts on the chart element
+ui.menu.on('change', ({ state }) => renderMyMenu(state)); // render with any framework
+const offKeys = ui.bindKeyboard(); // shortcuts on the chart element
 ```
 
 ## Capabilities
@@ -88,7 +91,7 @@ ui.setCapabilities({
   saveLayout: () => persistence.save(),
   alerts: { create: ({ price, time }) => api.createAlert(price, time) },
   inspect: (target) => console.log(target),
-  clipboard: (text) => myClipboard(text),     // optional overrides for side effects
+  clipboard: (text) => myClipboard(text), // optional overrides for side effects
   download: ({ name, blob }) => save(name, blob),
 });
 ```
@@ -111,15 +114,15 @@ The menu opens from:
 ```ts
 const off = ui.contextMenu.register({
   id: 'app.copy-close',
-  label: 'app.copyClose',                // translation key or literal text
+  label: 'app.copyClose', // translation key or literal text
   icon: 'copy',
   targets: ['candlestick'],
-  category: 'point',                     // groups separated in the menu
+  category: 'point', // groups separated in the menu
   order: 5,
   shortcut: 'Alt+C',
   isVisible: (ctx) => ctx.target?.point != null,
   isEnabled: (ctx) => !readOnly,
-  confirm: 'app.copyCloseConfirm',       // optional confirmation inside the menu
+  confirm: 'app.copyCloseConfirm', // optional confirmation inside the menu
   run: async (ctx) => {
     await copyText(String(ctx.target!.point!.close), ctx.capabilities);
     ctx.ui.notify('Copied');
@@ -136,7 +139,7 @@ ui.contextMenu.register({
   ],
 });
 
-ui.contextMenu.getActions('drawing');        // actions for a target kind
+ui.contextMenu.getActions('drawing'); // actions for a target kind
 ui.contextMenu.setEnabled('drawing.delete', false);
 ui.contextMenu.setHidden('point.inspect', true); // user preference, persisted
 ui.contextMenu.unregister('app.copy-close');
@@ -194,7 +197,7 @@ ui.actions.register({
   label: 'Last price',
   locations: ['header'],
   section: 'center',
-  component: LastPrice,          // ({ ui, action, context, location }) => ReactNode
+  component: LastPrice, // ({ ui, action, context, location }) => ReactNode
 });
 ui.actions.register({
   id: 'app.flip-theme',
@@ -204,12 +207,13 @@ ui.actions.register({
   section: 'right',
   shortcut: 'Alt+T',
   isActive: (ctx) => ctx.chart.theme().name === 'light',
-  run: (ctx) => ctx.ui.preferences.update({ theme: ctx.chart.theme().name === 'light' ? 'dark' : 'light' }),
+  run: (ctx) =>
+    ctx.ui.preferences.update({ theme: ctx.chart.theme().name === 'light' ? 'dark' : 'light' }),
 });
 
 ui.actions.override('header.screenshot', { icon: 'camera', shortcut: 'Mod+Shift+S' });
 ui.actions.restore('header.screenshot');
-ui.actions.unregisterOwner('my-plugin');   // everything a plugin registered
+ui.actions.unregisterOwner('my-plugin'); // everything a plugin registered
 await ui.actions.execute('chart.resetView');
 ```
 
@@ -267,7 +271,7 @@ as the axes (`localDigits`). Custom renderers read the same data as the built-in
 ```ts
 const data = ui.legend(hoveredTime); // or ui.legend() for the last bar
 data.timeItems; // [{ key: 'date', text: 'Jan 21, 2024' }, …]
-data.items;     // [{ key: 'open', label: 'O', text: '1506.65', value: 1506.65, trend: 'up' }, …]
+data.items; // [{ key: 'open', label: 'O', text: '1506.65', value: 1506.65, trend: 'up' }, …]
 data.indicators; // [{ indicator, label: 'RSI 14 close', visible, items: [{ text: '62.10', color }] }]
 ```
 
@@ -276,13 +280,13 @@ data.indicators; // [{ indicator, label: 'RSI 14 close', visible, items: [{ text
 Price labels are drawn by the engine through its price-line API. `ui.markers` (a `PriceMarkers`) decides what
 to show:
 
-| Preference (`markers`) | What it does | Default |
-|---|---|---|
-| `highLow` | Lines and axis labels at the highest high and lowest low of the **visible** bars; they follow scrolling and zooming | off |
-| `previousClose` | A line at the previous bar's close | off |
-| `lastPriceLine` | The main series' last-price line | on |
-| `lastValueLabel` | The main series' last-price label on the axis | on |
-| `indicatorLabels` | The indicators' last-value labels on the axis | on |
+| Preference (`markers`) | What it does                                                                                                        | Default |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------- | ------- |
+| `highLow`              | Lines and axis labels at the highest high and lowest low of the **visible** bars; they follow scrolling and zooming | off     |
+| `previousClose`        | A line at the previous bar's close                                                                                  | off     |
+| `lastPriceLine`        | The main series' last-price line                                                                                    | on      |
+| `lastValueLabel`       | The main series' last-price label on the axis                                                                       | on      |
+| `indicatorLabels`      | The indicators' last-value labels on the axis                                                                       | on      |
 
 ```ts
 ui.preferences.update({ markers: { highLow: true, previousClose: true } });
@@ -306,15 +310,15 @@ The object tree panel (sidebar → Object tree) lists:
 
 ## Built-in actions
 
-| Area | Action ids |
-|---|---|
-| Chart | `chart.resetView` (Alt+R), `chart.fitContent`, `pane.resetHeights`, `chart.addIndicator`, `chart.addDrawing`, `chart.crosshairMode`, `chart.chartType`, `chart.timeframe`, `chart.theme`, `chart.legend`, `chart.priceLabels`, `chart.settings`, `chart.exportImage`, `chart.exportData` |
-| Data point | `point.viewOhlc`, `point.copyPrice`, `point.copyTimestamp`, `point.horizontalLine`, `point.createAlert`, `point.inspect` |
-| Drawing | `drawing.edit`, `drawing.properties`, `drawing.duplicate` (Mod+D), `drawing.copy`, `drawing.paste`, `drawing.lock`, `drawing.visibility`, `drawing.bringToFront`, `drawing.sendToBack`, `drawing.group`, `drawing.ungroup`, `drawing.delete` (Delete) |
-| Indicator | `indicator.settings`, `indicator.appearance`, `indicator.duplicate`, `indicator.visibility`, `indicator.moveToPane`, `indicator.reset`, `indicator.remove` |
-| Axes | `axis.resetScale`, `axis.autoScale`, `axis.invert`, `axis.scaleMode`, `axis.resetTime`, `axis.timeVisible`, `axis.settings` |
-| Header | `header.symbol`, `header.compare`, `header.indicators`, `header.drawingTools`, `header.undo` (Mod+Z), `header.redo` (Mod+Shift+Z), `header.saveLayout` (Mod+S), `header.loadWorkspace`, `header.language`, `header.settings`, `header.screenshot` (Alt+S), `header.export`, `header.fullscreen` |
-| Sidebar | `sidebar.cursor` (Escape), `sidebar.crosshair`, `tool.<type>` for each of the 35 drawing tools, `sidebar.magnet`, `sidebar.removeAll`, `sidebar.<panel>` |
+| Area       | Action ids                                                                                                                                                                                                                                                                                      |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chart      | `chart.resetView` (Alt+R), `chart.fitContent`, `pane.resetHeights`, `chart.addIndicator`, `chart.addDrawing`, `chart.crosshairMode`, `chart.chartType`, `chart.timeframe`, `chart.theme`, `chart.legend`, `chart.priceLabels`, `chart.settings`, `chart.exportImage`, `chart.exportData`        |
+| Data point | `point.viewOhlc`, `point.copyPrice`, `point.copyTimestamp`, `point.horizontalLine`, `point.createAlert`, `point.inspect`                                                                                                                                                                        |
+| Drawing    | `drawing.edit`, `drawing.properties`, `drawing.duplicate` (Mod+D), `drawing.copy`, `drawing.paste`, `drawing.lock`, `drawing.visibility`, `drawing.bringToFront`, `drawing.sendToBack`, `drawing.group`, `drawing.ungroup`, `drawing.delete` (Delete)                                           |
+| Indicator  | `indicator.settings`, `indicator.appearance`, `indicator.duplicate`, `indicator.visibility`, `indicator.moveToPane`, `indicator.reset`, `indicator.remove`                                                                                                                                      |
+| Axes       | `axis.resetScale`, `axis.autoScale`, `axis.invert`, `axis.scaleMode`, `axis.resetTime`, `axis.timeVisible`, `axis.settings`                                                                                                                                                                     |
+| Header     | `header.symbol`, `header.compare`, `header.indicators`, `header.drawingTools`, `header.undo` (Mod+Z), `header.redo` (Mod+Shift+Z), `header.saveLayout` (Mod+S), `header.loadWorkspace`, `header.language`, `header.settings`, `header.screenshot` (Alt+S), `header.export`, `header.fullscreen` |
+| Sidebar    | `sidebar.cursor` (Escape), `sidebar.crosshair`, `tool.<type>` for each of the 35 drawing tools, `sidebar.magnet`, `sidebar.removeAll`, `sidebar.<panel>`                                                                                                                                        |
 
 `builtins: { exclude: ['header.compare'] }` leaves some out, and `builtins: false` leaves out all of them.
 `Mod` is ⌘ on Apple platforms and Ctrl elsewhere.
@@ -398,7 +402,10 @@ const ui = createChartUi(chart, {
       value: () => symbol,
       set: setSymbol,
       search: (query, { signal, limit, group }) => api.search(query, { signal, limit, group }), // or list()
-      groups: [{ id: 'crypto', label: 'Crypto' }, { id: 'fx', label: 'Forex' }],
+      groups: [
+        { id: 'crypto', label: 'Crypto' },
+        { id: 'fx', label: 'Forex' },
+      ],
     },
     compare: { add: (item) => addComparison(item.symbol) },
     trading: { submit: (ticket) => broker.place(ticket), simulatedLabel: 'Paper trading' },
@@ -436,8 +443,8 @@ series' tick size (`minMove`) before it is shown or passed on.
 ```ts
 ui.priceActions!.register({
   id: 'app.measure',
-  label: 'Measure from {price}',                // {price}: formatted, rounded
-  run: (ctx) => startMeasure(ctx.price!),       // { price, formatted, time, side, series, pane, symbol, tick, source }
+  label: 'Measure from {price}', // {price}: formatted, rounded
+  run: (ctx) => startMeasure(ctx.price!), // { price, formatted, time, side, series, pane, symbol, tick, source }
 });
 ```
 

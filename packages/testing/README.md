@@ -11,5 +11,5 @@ series.update(sim.next(1_000));
 ```
 
 All presets (`BTCUSDT`, `ETHUSDT`, `EURUSD`, `AAPL`, `NDXLIKE`, `XAUUSD`, `XAGUSD`) are random walks
-with parameters chosen to *resemble* those instruments. They are **not** real prices and must not be
+with parameters chosen to _resemble_ those instruments. They are **not** real prices and must not be
 presented as real-time or exchange-verified data.

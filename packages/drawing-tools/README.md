@@ -15,7 +15,13 @@ drawings.setActiveTool('fib-retracement'); // the user clicks twice (or drags) o
 drawings.on('textEdit', ({ id }) => openEditor(id)); // text tools ask the app for text
 
 // Programmatic use
-const line = drawings.add({ type: 'trend-line', points: [{ time, price }, { time: t2, price: p2 }] });
+const line = drawings.add({
+  type: 'trend-line',
+  points: [
+    { time, price },
+    { time: t2, price: p2 },
+  ],
+});
 drawings.update(line.id, { style: { lineColor: '#ff9800' } });
 drawings.undo();
 
@@ -47,17 +53,18 @@ drawings.load(saved, { resolveSeriesId: (stored) => mapping[stored] });
 
 ## Tools
 
-| Category | Tools |
-|---|---|
-| Lines | Trend Line, Ray, Extended Line, Arrow, Horizontal Line, Horizontal Ray, Vertical Line |
-| Shapes | Rectangle, Circle, Ellipse, Parallel Channel |
-| Text | Text, Note, Callout, Price Label |
-| Measure | Long Position, Short Position (with risk/reward), Price Range, Date Range, Date and Price Range |
-| Fibonacci | Retracement, Trend-Based Extension, Fan, Channel, Time Zones, Arcs, Wedge |
-| Gann | Gann Fan, Gann Box |
-| Patterns | Pitchfork, Schiff Pitchfork, Regression Channel, Elliott Impulse (12345), Elliott Correction (ABC), Cyclic Lines |
+| Category  | Tools                                                                                                            |
+| --------- | ---------------------------------------------------------------------------------------------------------------- |
+| Lines     | Trend Line, Ray, Extended Line, Arrow, Horizontal Line, Horizontal Ray, Vertical Line                            |
+| Shapes    | Rectangle, Circle, Ellipse, Parallel Channel                                                                     |
+| Text      | Text, Note, Callout, Price Label                                                                                 |
+| Measure   | Long Position, Short Position (with risk/reward), Price Range, Date Range, Date and Price Range                  |
+| Fibonacci | Retracement, Trend-Based Extension, Fan, Channel, Time Zones, Arcs, Wedge                                        |
+| Gann      | Gann Fan, Gann Box                                                                                               |
+| Patterns  | Pitchfork, Schiff Pitchfork, Regression Channel, Elliott Impulse (12345), Elliott Correction (ABC), Cyclic Lines |
 
 Conventions:
+
 - **Fibonacci retracement:** level 0 is at the second point and level 1 at the first.
 - **Regression channel:** a least-squares fit of the source closes between its two points. The `levels` setting
   gives the standard-deviation multiples of the outer lines (default ±2σ).
@@ -70,14 +77,22 @@ import { useDrawingToolbar } from '@market-chart/drawing-tools/react';
 
 function Toolbar() {
   const { manager, groups, activeTool, canUndo } = useDrawingToolbar(); // inside <Chart>, or pass the chart
-  return <>{/* render your own buttons and call manager.setActiveTool(type), manager.undo() … */}</>;
+  return (
+    <>{/* render your own buttons and call manager.setActiveTool(type), manager.undo() … */}</>
+  );
 }
 ```
 
 ## Custom tools
 
 ```ts
-import { defineTool, createDefaultToolRegistry, DrawingManager, geometry, render } from '@market-chart/drawing-tools';
+import {
+  defineTool,
+  createDefaultToolRegistry,
+  DrawingManager,
+  geometry,
+  render,
+} from '@market-chart/drawing-tools';
 
 const crossLine = defineTool({
   type: 'cross-line',
@@ -92,10 +107,15 @@ const crossLine = defineTool({
     render.line(ctx, { x: 0, y }, { x: view.width, y });
   },
   distance: (d, view, x, y) =>
-    Math.min(Math.abs(x - view.timeToX(d.points[0].time)), Math.abs(y - view.priceToY(d.points[0].price))),
+    Math.min(
+      Math.abs(x - view.timeToX(d.points[0].time)),
+      Math.abs(y - view.priceToY(d.points[0].price)),
+    ),
 });
 
-const manager = new DrawingManager(chart, { registry: createDefaultToolRegistry().register(crossLine) });
+const manager = new DrawingManager(chart, {
+  registry: createDefaultToolRegistry().register(crossLine),
+});
 ```
 
 ## Not included yet
