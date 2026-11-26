@@ -19,7 +19,7 @@ const UNIT_MS: Record<TimeframeUnit, number> = {
   M: 30 * 86_400_000,
 };
 
-/** Parses `5m`, `1h`, `1D`, `1W`, `1M` (also lower-case `d`/`w` and TradingView-style bare minutes like `60`). */
+/** Parses `5m`, `1h`, `1D`, `1W`, `1M` (also lower-case `d`/`w` and bare minutes like `60`). */
 export function parseTimeframe(timeframe: Timeframe): ParsedTimeframe {
   const text = String(timeframe).trim();
   if (/^\d+$/.test(text)) return parseTimeframe(`${text}m`);

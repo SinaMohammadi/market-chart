@@ -258,9 +258,9 @@ describe('WebSocket datafeed (security)', () => {
     Socket.all = [];
     const timers = manualTimers();
     const feed = make(timers);
-    feed.subscribe('NYSE|BRK.A', '1D', () => undefined);
+    feed.subscribe('EXCH|SYM.A', '1D', () => undefined);
     Socket.all[0]!.open();
-    expect(Socket.all[0]!.sent).toEqual(['{"symbol":"NYSE|BRK.A","interval":"1D"}']);
+    expect(Socket.all[0]!.sent).toEqual(['{"symbol":"EXCH|SYM.A","interval":"1D"}']);
     feed.destroy();
   });
 });
@@ -296,11 +296,11 @@ describe('sanitizeSymbolInfo (security)', () => {
         historyStart: 'yesterday',
         historyEnd: 1e300,
         timeframes: ['1m', 5, 'x'.repeat(100)],
-        exchange: 'BINANCE',
+        exchange: 'SIMEX',
       },
       'BTC',
     );
-    expect(info).toEqual({ symbol: 'BTC', exchange: 'BINANCE', timeframes: ['1m'] });
+    expect(info).toEqual({ symbol: 'BTC', exchange: 'SIMEX', timeframes: ['1m'] });
     expect(sanitizeSymbolInfo(null, 'ETH')).toEqual({ symbol: 'ETH' });
     expect(
       sanitizeSymbolInfo({ symbol: 'A', historyStart: 10, historyEnd: 5, pricePrecision: 4 }, 'A'),

@@ -4,7 +4,7 @@ import { heikinAshi, lineBreak, renko } from '@market-chart/charts';
 import { dailyBars } from '../data';
 import { useTheme } from '../site';
 
-const bars = dailyBars('NDXLIKE', 500);
+const bars = dailyBars('INDEX', 500);
 const TYPES = {
   candles: (b: typeof bars) => b,
   'heikin-ashi': heikinAshi,

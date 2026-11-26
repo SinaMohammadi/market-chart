@@ -14,7 +14,7 @@ const modes: PriceScaleMode[] = ['normal', 'logarithmic', 'percentage', 'indexed
 const crosshairs: CrosshairMode[] = ['normal', 'magnet', 'hidden'];
 
 export function SeriesTypesExample() {
-  const bars = dailyBars('AAPL', 600);
+  const bars = dailyBars('ACME', 600);
   const line = useMemo<LinePoint[]>(
     () => bars.map((b) => ({ time: b.time, value: b.close })),
     [bars],
@@ -72,7 +72,7 @@ export function SeriesTypesExample() {
       </div>
       <p className="desc" style={{ marginTop: 10 }}>
         Drag the price axis to scale it, double-click it to restore auto-scale. Drag the time axis
-        to change bar spacing, double-click it to reset. Synthetic AAPL-like daily data with
+        to change bar spacing, double-click it to reset. Synthetic equity-like daily data with
         weekends skipped.
       </p>
     </>

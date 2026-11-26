@@ -14,7 +14,7 @@ export function syntheticBars(symbol = 'BTCUSDT', count = 600, interval = HOUR):
   return bars;
 }
 
-export const dailyBars = (symbol = 'NDXLIKE', count = 500) => syntheticBars(symbol, count, DAY);
+export const dailyBars = (symbol = 'INDEX', count = 500) => syntheticBars(symbol, count, DAY);
 
 export function volumeOf(bars: readonly OhlcBar[]): LinePoint[] {
   return bars.map((b) => ({

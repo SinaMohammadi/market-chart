@@ -225,8 +225,8 @@ const { times, fields } = series.columns(); // typed-array copies, no object per
 other.setColumns({ times, fields: { value: fields.close! } }); // the fastest way to load big arrays
 ```
 
-1M candles load in about 80 ms and render in under a millisecond of engine time per frame; see
-[`docs/PERFORMANCE.md`](docs/PERFORMANCE.md).
+In the project's benchmark on a desktop PC, 1M candles load in about 80–100 ms and a frame takes about a
+millisecond of engine time; results vary by device. See [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md).
 
 ## Launch locally
 

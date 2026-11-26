@@ -148,9 +148,9 @@ export const syntheticAssets: Readonly<Record<string, SyntheticAsset>> = {
     skipWeekends: true,
     seed: 13,
   },
-  AAPL: {
-    symbol: 'AAPL',
-    description: 'Synthetic equity (large-cap tech-like)',
+  ACME: {
+    symbol: 'ACME',
+    description: 'Synthetic equity (large-cap-like)',
     startPrice: 185,
     volatility: 0.008,
     precision: 2,
@@ -158,9 +158,9 @@ export const syntheticAssets: Readonly<Record<string, SyntheticAsset>> = {
     skipWeekends: true,
     seed: 14,
   },
-  NDXLIKE: {
-    symbol: 'NDXLIKE',
-    description: 'Synthetic index (NASDAQ-100-like)',
+  INDEX: {
+    symbol: 'INDEX',
+    description: 'Synthetic stock index (large-cap index-like)',
     startPrice: 16800,
     volatility: 0.006,
     precision: 2,

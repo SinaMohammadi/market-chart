@@ -197,7 +197,7 @@ their workspace links exist; the same sources pass through the root `tsc` config
 | `ChartProvider`, `useChart`, `useSeries`, `useChartEvent`, `useCrosshair`, `useChartState`                              | Complete                                 | Passed                             | react           |
 | `"use client"` interactive entry, SSR-safe mounting                                                                     | Complete                                 | Passed                             | react           |
 | `StaticChart` (line / area / candlestick SVG) via `@market-chart/react/ssr`                                             | Complete                                 | Passed                             | react           |
-| Synthetic datasets (BTC-, ETH-, EURUSD-, AAPL-, NASDAQ-, gold-, silver-like) and tick simulator                         | Complete                                 | Passed                             | testing         |
+| Synthetic datasets (crypto-, FX-, equity-, index-, gold- and silver-like) and tick simulator                            | Complete                                 | Passed                             | testing         |
 | Canvas mock for jsdom tests                                                                                             | Complete                                 | Passed                             | testing         |
 | Playground (8 working examples)                                                                                         | Complete                                 | Manual                             | apps/playground |
 

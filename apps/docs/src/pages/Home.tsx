@@ -22,7 +22,7 @@ const STATS = [
 const FEATURES = [
   [
     'Fast engine',
-    'Canvas 2D, typed-array columns, 1M candles load in under 100 ms; a frame takes about a millisecond of engine time.',
+    'Canvas 2D and typed-array columns: in our benchmark 1M candles load in about 0.1 s and a frame takes about a millisecond of engine time (results vary by device).',
     '/guides/performance',
   ],
   [

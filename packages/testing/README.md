@@ -10,6 +10,6 @@ const sim = new TickSimulator(bars.at(-1)!, { interval: HOUR });
 series.update(sim.next(1_000));
 ```
 
-All presets (`BTCUSDT`, `ETHUSDT`, `EURUSD`, `AAPL`, `NDXLIKE`, `XAUUSD`, `XAGUSD`) are random walks
+All presets (`BTCUSDT`, `ETHUSDT`, `EURUSD`, `ACME`, `INDEX`, `XAUUSD`, `XAGUSD`) are random walks
 with parameters chosen to _resemble_ those instruments. They are **not** real prices and must not be
 presented as real-time or exchange-verified data.
