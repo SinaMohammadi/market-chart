@@ -1,0 +1,32 @@
+{
+  "name": "playground",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@market-chart/core": "workspace:*",
+    "@market-chart/react": "workspace:*",
+    "@market-chart/testing": "workspace:*",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "@market-chart/indicators": "workspace:*",
+    "@market-chart/drawing-tools": "workspace:*",
+    "@market-chart/charts": "workspace:*",
+    "@market-chart/datafeed": "workspace:*",
+    "@market-chart/persistence": "workspace:*",
+    "@market-chart/i18n": "workspace:*",
+    "@market-chart/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
+  }
+}

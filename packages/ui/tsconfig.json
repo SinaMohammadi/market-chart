@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "types": []
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../core" },
+    { "path": "../i18n" },
+    { "path": "../persistence" },
+    { "path": "../indicators" },
+    { "path": "../drawing-tools" },
+    { "path": "../react" }
+  ],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
+}

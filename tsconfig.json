@@ -1,0 +1,38 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/core"
+    },
+    {
+      "path": "packages/testing"
+    },
+    {
+      "path": "packages/react"
+    },
+    {
+      "path": "packages/indicators"
+    },
+    {
+      "path": "packages/drawing-tools"
+    },
+    {
+      "path": "packages/charts"
+    },
+    {
+      "path": "packages/datafeed"
+    },
+    {
+      "path": "packages/persistence"
+    },
+    {
+      "path": "packages/i18n"
+    },
+    {
+      "path": "packages/ui"
+    },
+    {
+      "path": "packages/trading"
+    }
+  ]
+}

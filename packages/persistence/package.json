@@ -1,0 +1,80 @@
+{
+  "name": "@market-chart/persistence",
+  "version": "0.1.0",
+  "description": "Chart and workspace persistence: storage adapters (memory, Web Storage, IndexedDB, REST), versioned schemas, migrations, autosave, conflict handling, cross-tab sync, import/export.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SinaMohammadi/market-chart.git",
+    "directory": "packages/persistence"
+  },
+  "homepage": "https://github.com/SinaMohammadi/market-chart/tree/main/packages/persistence#readme",
+  "bugs": {
+    "url": "https://github.com/SinaMohammadi/market-chart/issues"
+  },
+  "keywords": [
+    "chart",
+    "charting",
+    "financial-chart",
+    "candlestick",
+    "trading-chart",
+    "canvas",
+    "typescript",
+    "persistence",
+    "indexeddb",
+    "autosave"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+    "test": "vitest run --project persistence"
+  },
+  "dependencies": {
+    "@market-chart/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@market-chart/drawing-tools": "workspace:*",
+    "@market-chart/indicators": "workspace:*",
+    "@market-chart/testing": "workspace:*",
+    "@testing-library/react": "^16.3.0",
+    "@market-chart/react": "workspace:*"
+  },
+  "peerDependencies": {
+    "@market-chart/react": "workspace:*",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@market-chart/react": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

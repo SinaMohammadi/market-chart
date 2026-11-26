@@ -1,0 +1,28 @@
+{
+  "name": "nextjs-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@market-chart/core": "workspace:*",
+    "@market-chart/datafeed": "workspace:*",
+    "@market-chart/indicators": "workspace:*",
+    "@market-chart/persistence": "workspace:*",
+    "@market-chart/react": "workspace:*",
+    "@market-chart/testing": "workspace:*",
+    "next": "^16.0.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.9.2"
+  }
+}

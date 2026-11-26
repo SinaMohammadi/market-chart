@@ -1,0 +1,32 @@
+{
+  "name": "docs",
+  "private": true,
+  "type": "module",
+  "description": "Documentation site for market-chart: guides, live examples and generated API reference.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@market-chart/charts": "workspace:*",
+    "@market-chart/core": "workspace:*",
+    "@market-chart/datafeed": "workspace:*",
+    "@market-chart/drawing-tools": "workspace:*",
+    "@market-chart/i18n": "workspace:*",
+    "@market-chart/indicators": "workspace:*",
+    "@market-chart/persistence": "workspace:*",
+    "@market-chart/react": "workspace:*",
+    "@market-chart/testing": "workspace:*",
+    "@market-chart/ui": "workspace:*",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
+  }
+}

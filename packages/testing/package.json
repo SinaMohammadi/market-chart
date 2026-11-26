@@ -1,0 +1,55 @@
+{
+  "name": "@market-chart/testing",
+  "version": "0.1.0",
+  "description": "Deterministic synthetic market datasets and test helpers for market-chart.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SinaMohammadi/market-chart.git",
+    "directory": "packages/testing"
+  },
+  "homepage": "https://github.com/SinaMohammadi/market-chart/tree/main/packages/testing#readme",
+  "bugs": {
+    "url": "https://github.com/SinaMohammadi/market-chart/issues"
+  },
+  "keywords": [
+    "chart",
+    "charting",
+    "financial-chart",
+    "candlestick",
+    "trading-chart",
+    "canvas",
+    "typescript",
+    "testing",
+    "synthetic-data"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --project testing"
+  },
+  "dependencies": {
+    "@market-chart/core": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
