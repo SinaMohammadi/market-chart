@@ -414,3 +414,63 @@ describe('registered sections', () => {
     expect(container.querySelector('select[aria-label="Symbol"]')).not.toBeNull();
   });
 });
+
+describe('header overflow', () => {
+  it('moves items into "More" before the next paint when the header shrinks', async () => {
+    // jsdom has no layout: fake the header width, item widths and ResizeObserver.
+    let headerWidth = 2000;
+    const observers: (() => void)[] = [];
+    const g = globalThis as { ResizeObserver?: unknown };
+    const original = g.ResizeObserver;
+    g.ResizeObserver = class {
+      private readonly callback: () => void;
+      constructor(callback: () => void) {
+        this.callback = callback;
+      }
+      observe(): void {
+        observers.push(this.callback);
+      }
+      disconnect(): void {
+        const i = observers.indexOf(this.callback);
+        if (i >= 0) observers.splice(i, 1);
+      }
+      unobserve(): void {}
+    };
+    const proto = HTMLElement.prototype;
+    const descriptors = {
+      clientWidth: Object.getOwnPropertyDescriptor(proto, 'clientWidth'),
+      scrollWidth: Object.getOwnPropertyDescriptor(proto, 'scrollWidth'),
+      offsetWidth: Object.getOwnPropertyDescriptor(proto, 'offsetWidth'),
+    };
+    const isHeader = (el: Element) => el.getAttribute('aria-label') === 'Chart toolbar';
+    Object.defineProperty(proto, 'clientWidth', {
+      configurable: true,
+      get(this: HTMLElement) {
+        return isHeader(this) ? headerWidth : 0;
+      },
+    });
+    Object.defineProperty(proto, 'scrollWidth', {
+      configurable: true,
+      get(this: HTMLElement) {
+        return isHeader(this) ? headerWidth : 0;
+      },
+    });
+    Object.defineProperty(proto, 'offsetWidth', { configurable: true, get: () => 40 });
+    try {
+      await mount({ symbol: { value: () => 'A', set: () => undefined } }, []);
+      const header = container.querySelector<HTMLElement>('[aria-label="Chart toolbar"]')!;
+      const more = () => header.querySelector('[aria-label="More actions"]');
+      expect(more()).toBeNull();
+      headerWidth = 150;
+      // Called outside act(), as the browser does: the DOM must already be updated when it returns.
+      for (const callback of [...observers]) callback();
+      expect(more()).not.toBeNull();
+    } finally {
+      g.ResizeObserver = original;
+      for (const [name, descriptor] of Object.entries(descriptors)) {
+        if (descriptor) Object.defineProperty(proto, name, descriptor);
+        else Reflect.deleteProperty(proto, name);
+      }
+    }
+  });
+});

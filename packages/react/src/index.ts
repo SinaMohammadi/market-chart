@@ -5,7 +5,12 @@
  * non-interactive charts import `StaticChart` from `@market-chart/react/ssr`.
  */
 export { Chart } from './chart.js';
-export type { ChartProps } from './chart.js';
+export type {
+  ChartDataConnection,
+  ChartDataRequest,
+  ChartDataSource,
+  ChartProps,
+} from './chart.js';
 export { ChartProvider } from './provider.js';
 export { I18nContext, useDirection, useI18n, useLocale, useTranslation } from './i18n.js';
 export type { TranslationApi } from './i18n.js';

@@ -23,6 +23,9 @@ export function App({ bars, sma }) {
 
 - **Data updates:** when you pass a new array that keeps the same element references and only replaces the
   last point or appends a few, the component calls `series.update()` instead of `setData()`.
+- **Data by symbol:** `<Chart dataSource={source} symbol="BTCUSDT" interval="1h">` loads and reloads in place.
+  `datafeedSource(feed)` from `@market-chart/datafeed` is a source; any `{ connect(chart, { symbol, interval }) }`
+  returning `{ update, destroy }` works.
 - **Imperative access:** use `ref` on `<Chart>` (`ChartApi`) or on a series (`SeriesApi`).
 - **Hooks:** `useChart(id?)`, `useSeries`, `useChartEvent`, `useCrosshair`, `useChartState`.
 - **Sharing charts:** wrap the tree in `<ChartProvider>`, give the chart a `chartId`, then call `useChart(id)` from any component.

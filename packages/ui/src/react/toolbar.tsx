@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentType, KeyboardEvent as ReactKeyboardEvent, RefObject } from 'react';
+import { flushSync } from 'react-dom';
 import type { ChartUi } from '../chart-ui.js';
 import type { ToolbarGroup, ToolbarItem } from '../layout.js';
 import type { ActionContext, UiAction } from '../types.js';
@@ -209,7 +210,13 @@ export function ChartHeader({ ui, className }: ChartHeaderProps) {
     // The header renders nothing until the UI exists: observe once it does.
     const el = root.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(() => setWidth(el.clientWidth));
+    // ResizeObserver runs after layout and before paint. A plain state update would render in a later task,
+    // so the browser would paint one frame at the new width with the old items (an item visibly jumping into
+    // "More"). flushSync renders, measures and moves items before that paint.
+    const observer = new ResizeObserver(() => {
+      const next = el.clientWidth;
+      flushSync(() => setWidth(next));
+    });
     observer.observe(el);
     setWidth(el.clientWidth);
     return () => observer.disconnect();

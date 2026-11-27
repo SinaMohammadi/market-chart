@@ -115,6 +115,23 @@ missing or non-finite fields are dropped and counted, never guessed.
 
 ## React
 
+The shortest form needs only `<Chart>`:
+
+```tsx
+import { Chart } from '@market-chart/react';
+import { datafeedSource } from '@market-chart/datafeed';
+
+const source = useMemo(
+  () => datafeedSource(feed, { onStateChange: (s) => setStatus(s.status) }),
+  [feed],
+);
+
+<Chart height={500} dataSource={source} symbol="BTCUSDT" interval="1h" />;
+```
+
+Changing `symbol` or `interval` reloads in place; a new source reconnects. For more control (series options,
+the controller in state), use the React entry:
+
 ```tsx
 import { Chart } from '@market-chart/react';
 import { DatafeedSeries, useDatafeed } from '@market-chart/datafeed/react';

@@ -14,6 +14,29 @@ import { ChartContext, ChartRegisterContext, ChartSyncContext } from './context.
 import { I18nContext } from './i18n.js';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.js';
 
+/** What `<Chart>` loads: a symbol and an interval (e.g. `'1h'`). */
+export interface ChartDataRequest {
+  readonly symbol: string;
+  readonly interval: string;
+}
+
+/** A loaded chart's data connection (see `ChartDataSource`). */
+export interface ChartDataConnection {
+  /** The symbol or interval changed: load in place (without re-creating series). */
+  update(request: ChartDataRequest): void;
+  /** Removes what `connect` added (series, subscriptions). */
+  destroy(): void;
+}
+
+/**
+ * Feeds `<Chart symbol interval>`: `connect` adds and fills the chart's series. `datafeedSource(feed)` from
+ * `@market-chart/datafeed` is one; any object with this shape works. Pass a stable (memoised) object: a new
+ * identity reconnects.
+ */
+export interface ChartDataSource {
+  connect(chart: ChartApi, request: ChartDataRequest): ChartDataConnection;
+}
+
 export interface ChartProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'onClick'> {
   /** Chart options. Pass a stable (memoised) object; a new identity re-applies the options. */
   options?: ChartOptionsInput;
@@ -31,6 +54,12 @@ export interface ChartProps extends Omit<HTMLAttributes<HTMLDivElement>, 'childr
    * direction). Default true; `'digits'` also uses the language's digits for prices and dates.
    */
   syncLocale?: boolean | 'digits';
+  /** Loads `symbol` and `interval` into the chart (both needed). Changing either reloads in place. */
+  dataSource?: ChartDataSource;
+  /** Symbol for `dataSource`, e.g. `'BTCUSDT'`. */
+  symbol?: string;
+  /** Interval for `dataSource`, e.g. `'1h'`. */
+  interval?: string;
   onReady?: (chart: ChartApi) => void;
   onCrosshairMove?: (event: CrosshairMoveEvent) => void;
   onVisibleRangeChange?: (event: VisibleRangeChangeEvent) => void;
@@ -54,6 +83,9 @@ export const Chart = forwardRef<ChartApi | null, ChartProps>(function Chart(
     chartId,
     sync = true,
     syncLocale = true,
+    dataSource,
+    symbol,
+    interval,
     onReady,
     onCrosshairMove,
     onVisibleRangeChange,
@@ -132,6 +164,34 @@ export const Chart = forwardRef<ChartApi | null, ChartProps>(function Chart(
     syncGroup.add(chart);
     return () => syncGroup.remove(chart);
   }, [chart, syncGroup, sync]);
+
+  // Data: one connection per chart and source; symbol and interval changes update it in place.
+  const connection = useRef<ChartDataConnection | null>(null);
+  /** The request the connection has, so a reconnect is not followed by a redundant update. */
+  const sent = useRef<string | null>(null);
+  const key = symbol && interval ? JSON.stringify([symbol, interval]) : null;
+  const latestRequest = useRef<ChartDataRequest | null>(null);
+  latestRequest.current = symbol && interval ? { symbol, interval } : null;
+  const hasRequest = key !== null;
+  useEffect(() => {
+    const first = latestRequest.current;
+    if (!chart || !dataSource || !first) return;
+    const current = dataSource.connect(chart, first);
+    connection.current = current;
+    sent.current = JSON.stringify([first.symbol, first.interval]);
+    return () => {
+      connection.current = null;
+      sent.current = null;
+      current.destroy();
+    };
+  }, [chart, dataSource, hasRequest]);
+  useEffect(() => {
+    const current = connection.current;
+    const request = latestRequest.current;
+    if (!current || !request || key === sent.current) return;
+    sent.current = key;
+    current.update(request);
+  }, [key]);
 
   // The ref is null until the chart has mounted (and after unmount).
   useImperativeHandle(ref, () => chart as ChartApi, [chart]);
