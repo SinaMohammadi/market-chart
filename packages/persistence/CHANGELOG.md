@@ -1,5 +1,14 @@
 # @market-chart/persistence
 
+## 0.2.0
+
+### Patch Changes
+
+- Updated dependencies [664d8e8]
+- Updated dependencies [6b53d7a]
+- Updated dependencies [07125ab]
+  - @market-chart/core@0.2.0
+
 ## 0.1.1
 
 ### Patch Changes

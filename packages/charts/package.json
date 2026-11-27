@@ -1,6 +1,6 @@
 {
   "name": "@market-chart/charts",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Advanced chart types for @market-chart/core: Heikin-Ashi, Renko, Kagi, Point & Figure, Line Break, range/tick bars, hollow and volume candles, footprint, heatmaps, volume and market profiles, order flow.",
   "license": "MIT",
   "repository": {

@@ -147,6 +147,8 @@ likely live in their own package, sharing the canvas, theme, i18n (RTL, digits) 
   ticket, trading overlay, timeline synchronisation), and an external review if possible.
 - **Performance budgets in CI.** `pnpm bench` runs on a fixed CI machine and fails on regressions.
 - **Migration guide** from the last `0.x` to `1.0`.
+- **Sibling peer ranges.** During 0.x the packages list each other as peers with `>=0.1.0 <1.0.0` (so
+  changesets keeps 0.x minor releases minor); switch them to `workspace:^` for 1.0.
 - **Stable storage formats.** Layout, workspace, drawing and preference schemas frozen at a version with tested
   migrations from every earlier version.
 

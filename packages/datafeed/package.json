@@ -1,6 +1,6 @@
 {
   "name": "@market-chart/datafeed",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Datafeed contract, adapters (static, CSV/JSON, REST, WebSocket, SSE) and chart binding with realtime updates and history pagination.",
   "license": "MIT",
   "repository": {
@@ -61,7 +61,7 @@
     "@market-chart/react": "workspace:*"
   },
   "peerDependencies": {
-    "@market-chart/react": "workspace:^",
+    "@market-chart/react": "workspace:>=0.1.0 <1.0.0",
     "react": ">=18.0.0"
   },
   "peerDependenciesMeta": {

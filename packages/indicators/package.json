@@ -1,6 +1,6 @@
 {
   "name": "@market-chart/indicators",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Incremental technical indicator engine and chart integration for @market-chart/core.",
   "license": "MIT",
   "repository": {
@@ -60,7 +60,7 @@
     "@market-chart/react": "workspace:*"
   },
   "peerDependencies": {
-    "@market-chart/react": "workspace:^",
+    "@market-chart/react": "workspace:>=0.1.0 <1.0.0",
     "react": ">=18.0.0"
   },
   "peerDependenciesMeta": {
