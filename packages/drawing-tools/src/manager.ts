@@ -94,6 +94,8 @@ interface Gesture {
 }
 
 const HANDLE_RADIUS = 5;
+/** Handles are larger after a touch, so a fingertip can grab them. */
+const TOUCH_HANDLE_RADIUS = 9;
 const PASTE_OFFSET_BARS = 5;
 
 let managerCounter = 0;
@@ -119,6 +121,8 @@ export class DrawingManager {
   private readonly keepToolActive: boolean;
   private draft: Draft | null = null;
   private gesture: Gesture | null = null;
+  /** Last press was a touch: handles are drawn and hit-tested at touch size. */
+  private touchHandles = false;
   private hovered: string | null = null;
   private readonly history = new DrawingHistory();
   private clipboard: Drawing[] = [];
@@ -814,7 +818,7 @@ export class DrawingManager {
     for (const p of this.handlePoints(drawing, tool, view)) {
       if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, HANDLE_RADIUS, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, this.touchHandles ? TOUCH_HANDLE_RADIUS : HANDLE_RADIUS, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
     }
@@ -877,7 +881,9 @@ export class DrawingManager {
     if (e.pane === null || Number.isNaN(e.paneY)) return null;
     const size = this.paneSize(e.pane);
     if (!size) return null;
-    const tolerance = e.pointerType === 'touch' ? 12 : 6;
+    const touch = e.pointerType === 'touch';
+    const tolerance = touch ? 12 : 6;
+    const radius = touch ? TOUCH_HANDLE_RADIUS : HANDLE_RADIUS;
     const ts = this.chart.timeScale();
     const p = { x: e.paneX, y: e.paneY };
     const candidates = this.sorted().reverse();
@@ -894,7 +900,7 @@ export class DrawingManager {
       const tool = this.registry.get(d.type);
       const handles = this.handlePoints(d, tool, this.view(series, size.width, size.height, ts));
       const index = handles.findIndex(
-        (h) => Math.hypot(h.x - p.x, h.y - p.y) <= HANDLE_RADIUS + tolerance / 2,
+        (h) => Math.hypot(h.x - p.x, h.y - p.y) <= radius + tolerance / 2,
       );
       if (index >= 0) return { drawing: d, handle: index };
     }
@@ -940,13 +946,23 @@ export class DrawingManager {
     pointerMove: (e) => this.onPointerMove(e),
     pointerUp: (e) => this.onPointerUp(e),
     pointerCancel: () => this.onPointerCancel(),
+    // Holding a finger on a drawing opens its context menu (instead of moving it).
+    longPress: () => this.gesture !== null,
     hover: (e) => this.onHover(e),
     doubleClick: (e) => this.onDoubleClick(e),
     keyDown: (e) => this.onKeyDown(e),
   };
 
+  /** Switches between mouse-sized and touch-sized handles. */
+  private setTouchHandles(touch: boolean): void {
+    if (touch === this.touchHandles) return;
+    this.touchHandles = touch;
+    if (this._selection.length || this.draft) this.redraw();
+  }
+
   private onPointerDown(e: ChartPointerEvent): boolean {
     if (this.destroyed || (e.pointerType === 'mouse' && e.button !== 0)) return false;
+    this.setTouchHandles(e.pointerType === 'touch');
     if (this._tool) {
       const draft = this.draft;
       if (draft) {
@@ -1108,6 +1124,7 @@ export class DrawingManager {
   }
 
   private onHover(e: ChartPointerEvent): string | null {
+    this.setTouchHandles(false);
     if (this.draft) {
       const anchor = this.anchorAt(e, this.draft.series, this.draft.pane);
       if (anchor) this.draft.points[this.draft.placing] = anchor;

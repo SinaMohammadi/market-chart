@@ -160,6 +160,44 @@ describe('IndicatorManager', () => {
     expect(restored[1]!.visible()).toBe(false);
   });
 
+  it('saves and restores the pane an indicator was moved to', () => {
+    const manager = new IndicatorManager(chart);
+    const ema = manager.add('ema', candles, { id: 'ema' });
+    const rsiHandle = manager.add('rsi', candles, { id: 'rsi' });
+    const macd = manager.add('macd', candles, { id: 'macd' });
+    // EMA moved into RSI's pane, MACD into a pane of its own below, then RSI's pane joined by MACD.
+    ema.moveToPane(1);
+    macd.moveToPane(rsiHandle.pane());
+    expect([ema.pane(), rsiHandle.pane(), macd.pane()]).toEqual([1, 1, 1]);
+    const saved = JSON.parse(JSON.stringify(manager.serialize())) as ReturnType<
+      IndicatorManager['serialize']
+    >;
+    expect(saved.map((c) => c.pane)).toEqual([1, undefined, 1]);
+    manager.clear();
+    expect(chart.panes()).toHaveLength(1);
+    const errors = vi.fn();
+    manager.on('error', errors);
+    const restored = manager.restore(saved, (id) => chart.series().find((s) => s.id === id));
+    expect(restored.map((h) => h.pane())).toEqual([1, 1, 1]);
+    expect(chart.panes()).toHaveLength(2);
+    expect(errors).not.toHaveBeenCalled();
+    // Still saved after the restore.
+    expect(manager.serialize().map((c) => c.pane)).toEqual([1, undefined, 1]);
+    // An index past the last pane opens a new pane; an invalid one is reported and ignored.
+    manager.clear();
+    const again = manager.restore(
+      [
+        { ...saved[0]!, pane: 5 },
+        { ...saved[2]!, pane: -1 as number },
+      ],
+      (id) => chart.series().find((s) => s.id === id),
+    );
+    // MACD takes pane 1 when added; EMA's index 5 does not exist, so it gets a new pane after it.
+    expect(again[0]!.pane()).toBe(2);
+    expect(again[1]!.pane()).toBe(1);
+    expect(errors).toHaveBeenCalledOnce();
+  });
+
   it('caps how many indicators a stored list restores and rejects hostile styles (security)', () => {
     const manager = new IndicatorManager(chart);
     const errors = vi.fn();

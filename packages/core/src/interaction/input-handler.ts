@@ -43,6 +43,12 @@ export interface ChartInputHandler {
   pointerUp?(event: ChartPointerEvent): void;
   /** The captured gesture was interrupted (second finger, pointer cancel, chart destroyed). */
   pointerCancel?(): void;
+  /**
+   * A captured touch was held still (with `interaction.touchContextMenu`). Return true to turn the gesture
+   * into a context-menu request: the chart then calls `pointerCancel` and emits `contextMenu` at the point.
+   * Without this method, or when it returns false, the handler keeps the gesture.
+   */
+  longPress?(event: ChartPointerEvent): boolean;
   /** Mouse/pen movement without a pressed button. Return a CSS cursor to override the default. */
   hover?(event: ChartPointerEvent): string | null;
   /** Return true when handled; the chart then skips its own handling. */

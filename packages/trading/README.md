@@ -92,7 +92,9 @@ import { TradingOverlay } from '@market-chart/trading/react';
   order, Close position, Remove take-profit/stop-loss, Hide and settings items (cancel and close ask for
   confirmation); an object-tree section per kind (rows are focusable buttons: Enter selects, Delete cancels,
   focus highlights the line); a "Trading" settings category; preferences saved under
-  `extensions.trading`; texts in English, Persian and Arabic.
+  `extensions.trading`; texts in English, Persian and Arabic. Several overlays on one `ChartUi` (for
+  example one per account) share the menu items, object-tree sections and settings; an action runs on the
+  overlay that drew the object it was opened on.
 
 ## Preferences
 
@@ -104,7 +106,6 @@ import { TradingOverlay } from '@market-chart/trading/react';
 
 - Labels are drawn on the canvas: screen readers reach the objects through the object tree (with a
   `ChartUi`), not on the chart itself.
-- One overlay per `ChartUi` registers the context-menu actions; a second overlay on the same UI shares them.
 - Drag and cancel interactions use the chart's input handlers: mouse, pen and touch. Keyboard users modify
   objects through `onEdit` (object tree) or `overlay.modify(key, price)`.
 

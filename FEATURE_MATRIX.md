@@ -66,10 +66,16 @@ throttled; use the playground's "Add 1,000 orders" button), touch long-press on 
 readers, the Next.js example.
 
 Limitations: labels on the canvas are reached by screen readers through the object tree, not on the chart;
-the "+" button follows the pointer (keyboard users use the context-menu key and shortcuts); price-action
-shortcuts compare `event.key` (on macOS `Alt`+letter types another character); price actions are not listed in
-the shortcut settings; one overlay per `ChartUi` registers the context-menu actions; with very large order
-books, the engine's axis labels dominate the frame time (`axisLabels: false` helps).
+the "+" button follows the pointer (keyboard users use the context-menu key and shortcuts).
+
+Fixed for 0.2 (unit and jsdom tests, each failing without its fix): shortcuts match the physical key when
+the character does not name it (`Alt`+letter on macOS, Persian and Arabic layouts, `Shift`+digit); price
+actions are listed in the shortcut settings with a sample price when their shortcuts are on; several
+overlays on one `ChartUi` share the menu items, object-tree sections and settings, and each action runs on
+the overlay that drew the object; crowded axis labels are thinned (one per label height, the series' last
+value and the selected line first, "+N" on the kept label), so hundreds of orders in a small range no
+longer fill the axis; a touch long-press on an order line opens its menu. Pan frame p95 with 1,000 orders in
+the Node benchmark: 3.5 ms (budget 16 ms).
 
 ## Security
 
@@ -247,28 +253,28 @@ their workspace links exist; the same sources pass through the root `tsc` config
 
 ## Drawing tools
 
-| Feature                                                                                                        | Status             | Tests   | Package             |
-| -------------------------------------------------------------------------------------------------------------- | ------------------ | ------- | ------------------- |
-| Plugin input handlers (capture gestures before pan/zoom, hover cursors, keys, double-click), isolated failures | Complete           | Passed  | core                |
-| Overlay-only plugin redraw; time scale logical conversions (`timeToLogical`, `logicalToTime`, …)               | Complete           | Passed  | core                |
-| Drawing model: data-space anchors, bar snapping, future times, per-series price mapping                        | Complete           | Passed  | drawing-tools       |
-| Creation by click-click and drag; one-click seeded tools; rubber-band preview; Escape cancels                  | Complete           | Passed  | drawing-tools       |
-| Selection (click, Shift+click), hover highlight, handles, move and handle editing                              | Complete           | Passed  | drawing-tools       |
-| Magnet snapping to OHLC (weak / strong)                                                                        | Complete           | Passed  | drawing-tools       |
-| Undo/redo (one entry per drag), delete, copy/paste, z-order, lock, visibility, grouping                        | Complete           | Passed  | drawing-tools       |
-| Keyboard shortcuts (Delete, Ctrl/⌘+Z/Y/C/V, Esc)                                                               | Complete           | Passed  | drawing-tools       |
-| Versioned, validated JSON persistence with series-id mapping and migration hook                                | Complete           | Passed  | drawing-tools       |
-| Lines: trend line, ray, extended line, arrow, horizontal line, horizontal ray, vertical line                   | Complete           | Passed  | drawing-tools       |
-| Shapes: rectangle, circle, ellipse, parallel channel                                                           | Complete           | Passed  | drawing-tools       |
-| Text: text, note, callout, price label (text editing via the `textEdit` event)                                 | Complete           | Passed  | drawing-tools       |
-| Measure: long/short position with risk/reward, price range, date range, date and price range                   | Complete           | Passed  | drawing-tools       |
-| Fibonacci: retracement, extension, fan, channel, time zones, arcs, wedge                                       | Complete           | Passed  | drawing-tools       |
-| Gann fan, Gann box                                                                                             | Complete           | Passed  | drawing-tools       |
-| Pitchfork, Schiff pitchfork, regression channel, Elliott impulse/correction, cyclic lines                      | Complete           | Passed  | drawing-tools       |
-| Tool registry and custom tool API (`defineTool`, geometry and render helpers)                                  | Complete           | Passed  | drawing-tools       |
-| Headless React toolbar state (`useDrawingToolbar`, `useDrawingManager`)                                        | Complete           | Manual  | drawing-tools/react |
-| Drawing toolbar example built on the headless hook                                                             | Complete (example) | Manual  | apps/playground     |
-| Touch drawing (drag works; no long-press menus or enlarged touch handles yet)                                  | Partial            | Pending | drawing-tools       |
+| Feature                                                                                                        | Status                                  | Tests          | Package             |
+| -------------------------------------------------------------------------------------------------------------- | --------------------------------------- | -------------- | ------------------- |
+| Plugin input handlers (capture gestures before pan/zoom, hover cursors, keys, double-click), isolated failures | Complete                                | Passed         | core                |
+| Overlay-only plugin redraw; time scale logical conversions (`timeToLogical`, `logicalToTime`, …)               | Complete                                | Passed         | core                |
+| Drawing model: data-space anchors, bar snapping, future times, per-series price mapping                        | Complete                                | Passed         | drawing-tools       |
+| Creation by click-click and drag; one-click seeded tools; rubber-band preview; Escape cancels                  | Complete                                | Passed         | drawing-tools       |
+| Selection (click, Shift+click), hover highlight, handles, move and handle editing                              | Complete                                | Passed         | drawing-tools       |
+| Magnet snapping to OHLC (weak / strong)                                                                        | Complete                                | Passed         | drawing-tools       |
+| Undo/redo (one entry per drag), delete, copy/paste, z-order, lock, visibility, grouping                        | Complete                                | Passed         | drawing-tools       |
+| Keyboard shortcuts (Delete, Ctrl/⌘+Z/Y/C/V, Esc)                                                               | Complete                                | Passed         | drawing-tools       |
+| Versioned, validated JSON persistence with series-id mapping and migration hook                                | Complete                                | Passed         | drawing-tools       |
+| Lines: trend line, ray, extended line, arrow, horizontal line, horizontal ray, vertical line                   | Complete                                | Passed         | drawing-tools       |
+| Shapes: rectangle, circle, ellipse, parallel channel                                                           | Complete                                | Passed         | drawing-tools       |
+| Text: text, note, callout, price label (text editing via the `textEdit` event)                                 | Complete                                | Passed         | drawing-tools       |
+| Measure: long/short position with risk/reward, price range, date range, date and price range                   | Complete                                | Passed         | drawing-tools       |
+| Fibonacci: retracement, extension, fan, channel, time zones, arcs, wedge                                       | Complete                                | Passed         | drawing-tools       |
+| Gann fan, Gann box                                                                                             | Complete                                | Passed         | drawing-tools       |
+| Pitchfork, Schiff pitchfork, regression channel, Elliott impulse/correction, cyclic lines                      | Complete                                | Passed         | drawing-tools       |
+| Tool registry and custom tool API (`defineTool`, geometry and render helpers)                                  | Complete                                | Passed         | drawing-tools       |
+| Headless React toolbar state (`useDrawingToolbar`, `useDrawingManager`)                                        | Complete                                | Manual         | drawing-tools/react |
+| Drawing toolbar example built on the headless hook                                                             | Complete (example)                      | Manual         | apps/playground     |
+| Touch drawing: drag, enlarged handles after a touch, long-press opens the drawing's menu without moving it     | Complete (touch: simulated events only) | Passed (jsdom) | drawing-tools, core |
 
 ## Advanced features
 
@@ -360,7 +366,7 @@ their workspace links exist; the same sources pass through the root `tsc` config
 | RTL: mirrored header sections, sidebar side, menus and submenus, arrow keys, directional icons, dialogs, price-line titles | Complete                                                                      | Passed (unit, jsdom, Chromium positioning) | Playground RTL page | core, ui        |
 | RTL time axis                                                                                                              | Partial — time keeps its left-to-right order (labels localised, not reversed) | Passed                                     | Playground RTL page | core            |
 | Non-Gregorian calendars on the axes                                                                                        | Planned — axis dates are Gregorian with localised month names                 | Passed (Gregorian)                         | —                   | core            |
-| Translated indicator names                                                                                                 | Partial — 25 most common indicators; others show their English names          | Passed                                     | —                   | i18n            |
+| Translated indicator names                                                                                                 | Complete — all 44 built-in indicators in English, Persian and Arabic          | Passed                                     | —                   | i18n            |
 
 ### Context menus
 
@@ -488,8 +494,10 @@ their workspace links exist; the same sources pass through the root `tsc` config
   keeps its left-to-right order in RTL.
 - When `@market-chart/ui` is attached, a touch long-press opens the context menu instead of the touch
   crosshair (`touchContextMenu: false` keeps the crosshair).
-- Moving an indicator to another pane is not part of the indicator manager's `config()`, so persistence
-  restores it in its original pane.
+- An indicator moved to another pane is saved with its pane index (`config().pane`); `restore()` moves it
+  back after every indicator is added, or to a new pane when that index no longer exists.
+- Axis labels keep inside the pane when they are thinned (the engine's axis); the trading overlay's own
+  labels on the chart are still stacked without thinning.
 - The header's overflow is measured after rendering; one frame can show an item that then moves to "More".
 - Price-line titles (High, Low, Prev close) are drawn at the pane's left edge and sit under the legend; the
   legend rows have a translucent background and the axis labels show the prices.

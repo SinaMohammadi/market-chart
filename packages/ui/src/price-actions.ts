@@ -198,6 +198,16 @@ export class PriceActions {
     return this.contextAt({ price: e.price, time: e.time, pane: e.pane, source });
   }
 
+  /**
+   * A sample price context for lists that show price actions without a price (the shortcut settings): the
+   * main series' last price (100 while it has no data), from the `shortcut` source. Null without a series.
+   */
+  sample(): PriceContext | null {
+    const series = mainSeriesOf(this.ui, null);
+    if (!series) return null;
+    return this.contextAt({ price: lastPrice(series) ?? 100, series, source: 'shortcut' });
+  }
+
   /** Menu entries of the available price actions at `price`. */
   entries(price: PriceContext): MenuEntry[] {
     const context = this.ui.context(null, 'contextMenu', price);

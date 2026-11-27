@@ -17,6 +17,36 @@ export interface KeyLike {
   readonly metaKey: boolean;
   readonly altKey: boolean;
   readonly shiftKey: boolean;
+  /** Physical key (`KeyB`, `Digit1`): used when `key` is not the letter, e.g. Alt+B gives "∫" on macOS. */
+  readonly code?: string;
+}
+
+const PRINTABLE_ASCII = /^[ -~]$/;
+
+/**
+ * The letter or digit of the physical key (`KeyB` → "b", `Digit1` → "1"), or null for other codes. Used when
+ * the character does not name the key: Alt on macOS (Alt+B → "∫"), non-Latin layouts (Persian, Arabic) and
+ * Shift with digits (Shift+1 → "!").
+ */
+export function letterOfCode(code: string | undefined): string | null {
+  const m = code ? /^(?:Key([A-Z])|Digit([0-9]))$/.exec(code) : null;
+  return m ? (m[1] ?? m[2]!).toLowerCase() : null;
+}
+
+/**
+ * The key of a keyboard event as shortcuts name it: the character, or the physical letter or digit when the
+ * character does not name it (see `letterOfCode`). Lower case for single characters.
+ */
+export function shortcutKeyOf(event: KeyLike): string {
+  const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+  const physical = letterOfCode(event.code);
+  if (!physical) return key;
+  // Only when the character does not name a Latin key, so AZERTY's A (physical Q) still means A.
+  const fromCode =
+    key === 'Dead' ||
+    (event.key.length === 1 && !PRINTABLE_ASCII.test(event.key)) ||
+    (event.shiftKey && /^[0-9]$/.test(physical) && !/^[0-9]$/.test(key));
+  return fromCode ? physical : key;
 }
 
 /** Parses `Mod+Shift+Z` style shortcuts (`Mod` = ⌘ on Apple platforms, Ctrl elsewhere). */
@@ -54,10 +84,10 @@ export function matchShortcut(
   if (!s) return false;
   const ctrl = s.ctrl || (s.mod && !apple);
   const meta = s.meta || (s.mod && apple);
-  const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
   const wanted = s.key.length === 1 ? s.key.toLowerCase() : s.key;
+  const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
   return (
-    key === wanted &&
+    (key === wanted || shortcutKeyOf(event) === wanted) &&
     event.ctrlKey === ctrl &&
     event.metaKey === meta &&
     event.altKey === s.alt &&

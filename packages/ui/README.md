@@ -152,7 +152,8 @@ The default renderer behaves as follows:
 - **Focus:** moves into the menu and is restored when it closes.
 - **Closing:** on Escape, an outside click, scroll, resize or window blur.
 - **Positioning:** viewport-aware and RTL-aware (opens and flips toward the start side).
-- **Shortcuts:** shown in the platform's style (⌘ on Apple platforms).
+- **Shortcuts:** shown in the platform's style (⌘ on Apple platforms). Letters and digits also match by
+  physical key when the character does not name it (`Alt`+letter on macOS, Persian and Arabic layouts).
 - **Accessibility:** ARIA menus with `aria-activedescendant`, forced colours and reduced motion are supported.
 
 **Custom rendering.** `useContextMenu(ui)` gives the same state, keyboard handling and ARIA props for your own

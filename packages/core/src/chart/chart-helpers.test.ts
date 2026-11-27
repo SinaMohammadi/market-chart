@@ -59,6 +59,38 @@ describe('layoutLabels', () => {
       expect(placed[i]!.top - placed[i - 1]!.top).toBeGreaterThanOrEqual(11);
     expect(placed[0]!.top).toBe(45);
   });
+  it('stacks short runs even when thinning, and counts every label once', () => {
+    const placed = layoutLabels([label(50), label(52), label(54)], 10, 200, 1, { thin: true });
+    expect(placed.map((l) => l.count)).toEqual([1, 1, 1]);
+  });
+  it('thins hundreds of labels in a small range to one per label height, keeping priorities', () => {
+    // 300 lines between y=100 and y=130 (e.g. an order book), and the series' last value among them.
+    const many = Array.from({ length: 300 }, (_, i) => label(100 + i * 0.1, `o${i}`));
+    const last = { ...label(115, 'last'), priority: 1 };
+    const placed = layoutLabels([...many, last], 16, 400, 1, { thin: true });
+    expect(placed.length).toBeLessThanOrEqual(3);
+    expect(placed.some((l) => l.text === 'last')).toBe(true);
+    expect(placed.reduce((n, l) => n + l.count, 0)).toBe(301);
+    // Kept labels stay next to their prices instead of spreading over the axis.
+    for (const l of placed) expect(Math.abs(l.top + 8 - l.y)).toBeLessThanOrEqual(24);
+    for (let i = 1; i < placed.length; i++)
+      expect(placed[i]!.top - placed[i - 1]!.top).toBeGreaterThanOrEqual(17);
+  });
+  it('drops the least important labels when they cannot all fit the pane', () => {
+    // 20 well-spaced labels, room for 5.
+    const spread = Array.from({ length: 20 }, (_, i) => ({
+      ...label(i * 20),
+      priority: i === 13 ? 5 : 0,
+    }));
+    const placed = layoutLabels(spread, 10, 54, 1, { thin: true });
+    expect(placed).toHaveLength(5);
+    expect(placed.some((l) => l.priority === 5)).toBe(true);
+    expect(placed.reduce((n, l) => n + l.count, 0)).toBe(20);
+    expect(placed[0]!.top).toBeGreaterThanOrEqual(0);
+    expect(placed[placed.length - 1]!.top + 10).toBeLessThanOrEqual(54);
+    // Without `thin` every label is kept (stacked), as before.
+    expect(layoutLabels(spread, 10, 54, 1)).toHaveLength(20);
+  });
   it('pushes the stack back inside the bottom edge', () => {
     const placed = layoutLabels([label(98), label(99)], 10, 100, 0);
     expect(placed[1]!.top + 10).toBeLessThanOrEqual(100);

@@ -55,6 +55,11 @@ export interface IndicatorConfig {
   readonly visible: boolean;
   /** Id of the source series at serialisation time; map it back in `restore`. */
   readonly sourceSeriesId: string;
+  /**
+   * Pane index the user moved the indicator to (`moveToPane`); absent while it is where `add` put it.
+   * `restore` moves it back after every indicator is added (to a new pane when that index does not exist).
+   */
+  readonly pane?: number;
 }
 
 export interface IndicatorHandle {
@@ -76,7 +81,7 @@ export interface IndicatorHandle {
   series(): ReadonlyMap<string, SeriesApi>;
   /** Pane index of the indicator's outputs. */
   pane(): number;
-  /** Moves all outputs to another pane (`'new'` adds a pane below). Not part of `config()`. */
+  /** Moves all outputs to another pane (`'new'` adds a pane below). Saved in `config()` as `pane`. */
   moveToPane(target: number | 'new'): void;
   /** Raw computed columns (index-aligned with the source bars). */
   result(): IndicatorResult;
@@ -196,6 +201,8 @@ class IndicatorInstance implements IndicatorHandle {
   private _style: IndicatorStyle;
   private _visible: boolean;
   private _removed = false;
+  /** Set by `moveToPane`: the pane is then part of `config()`. */
+  private moved = false;
   private readonly outputSeries = new Map<string, SeriesApi>();
   private levelLines: PriceLineApi[] = [];
   private offsets: Readonly<Record<string, number>> = {};
@@ -298,6 +305,7 @@ class IndicatorInstance implements IndicatorHandle {
       if (first) pane = series.options().pane;
       first = false;
     }
+    this.moved = true;
     this.manager.notifyChanged(this);
   }
 
@@ -339,6 +347,7 @@ class IndicatorInstance implements IndicatorHandle {
       style: JSON.parse(JSON.stringify(this._style)) as IndicatorStyle,
       visible: this._visible,
       sourceSeriesId: this.source.id,
+      ...(this.moved ? { pane: this.pane() } : {}),
     };
   }
 
@@ -908,6 +917,7 @@ export class IndicatorManager {
       });
     }
     const restored: IndicatorHandle[] = [];
+    const moves: { readonly indicator: IndicatorHandle; readonly pane: unknown }[] = [];
     for (const config of configs.slice(0, max)) {
       try {
         if (!config || typeof config !== 'object' || typeof config.type !== 'string')
@@ -915,19 +925,31 @@ export class IndicatorManager {
         const source = resolveSource(String(config.sourceSeriesId));
         if (!source)
           throw new IndicatorError(`source series "${String(config.sourceSeriesId)}" not found`);
-        restored.push(
-          this.add(config.type, source, {
-            id: typeof config.id === 'string' ? config.id : undefined,
-            params: config.params,
-            style: config.style,
-            visible: config.visible !== false,
-          }),
-        );
+        const indicator = this.add(config.type, source, {
+          id: typeof config.id === 'string' ? config.id : undefined,
+          params: config.params,
+          style: config.style,
+          visible: config.visible !== false,
+        });
+        restored.push(indicator);
+        if (config.pane !== undefined) moves.push({ indicator, pane: config.pane });
       } catch (error) {
         this.emitter.emit('error', {
           error,
           id: typeof config?.id === 'string' ? config.id : undefined,
         });
+      }
+    }
+    // Panes are restored once every indicator exists, in the saved order, so an index that pointed at
+    // another indicator's pane points at it again.
+    for (const { indicator, pane } of moves) {
+      try {
+        if (typeof pane !== 'number' || !Number.isInteger(pane) || pane < 0)
+          throw new IndicatorError(`invalid pane ${String(pane)} in indicator config`);
+        if (pane === indicator.pane()) continue;
+        indicator.moveToPane(pane < this.chart.panes().length ? pane : 'new');
+      } catch (error) {
+        this.emitter.emit('error', { error, id: indicator.id });
       }
     }
     return restored;

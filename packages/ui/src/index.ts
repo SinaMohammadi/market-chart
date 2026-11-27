@@ -91,6 +91,7 @@ export {
   safeFileName,
   safeText,
   seriesCsv,
+  shortcutKeyOf,
   timeframeLabel,
 } from './util.js';
 export type { KeyLike } from './util.js';

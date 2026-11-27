@@ -246,6 +246,7 @@ export class InteractionController {
         if (handler.pointerDown?.(info)) {
           this.captured = { handler, pointerId: event.pointerId };
           this.drag = null;
+          this.startCapturedLongPress(event, handler);
           return;
         }
       }
@@ -282,20 +283,7 @@ export class InteractionController {
         const pointer = this.pointers.get(event.pointerId);
         if (!pointer || this.pointers.size !== 1) return;
         if (touchMenu) {
-          // The gesture becomes a context-menu request: no pan, no tap on release.
-          this.drag = { kind: 'touchCrosshair' };
-          this.host.contextMenu!({
-            x: pointer.x,
-            y: pointer.y,
-            clientX: rect.left + pointer.x,
-            clientY: rect.top + pointer.y,
-            source: 'touch',
-            pointerType: 'touch',
-            shiftKey: false,
-            ctrlKey: false,
-            altKey: false,
-            metaKey: false,
-          });
+          this.touchMenuAt(pointer, rect);
           return;
         }
         this.drag = { kind: 'touchCrosshair' };
@@ -330,6 +318,11 @@ export class InteractionController {
     pointer.x = x;
     pointer.y = y;
     if (this.captured && this.captured.pointerId === event.pointerId) {
+      if (
+        this.longPressHandle !== null &&
+        Math.hypot(x - pointer.startX, y - pointer.startY) > LONG_PRESS_TOLERANCE
+      )
+        this.cancelLongPress();
       this.captured.handler.pointerMove?.(this.pointerEvent(event, x, y));
       if (pointer.type === 'mouse') this.hover(x, y);
       return;
@@ -380,6 +373,7 @@ export class InteractionController {
     if (this.captured && this.captured.pointerId === event.pointerId) {
       const { handler } = this.captured;
       this.captured = null;
+      this.cancelLongPress();
       const { x, y } = this.local(event);
       this.release(event.pointerId);
       handler.pointerUp?.(this.pointerEvent(event, x, y));
@@ -599,6 +593,49 @@ export class InteractionController {
     }
     if (this.pointers.size < 2) this.pinchDistance = 0;
     if (this.pointers.size === 0) this.drag = null;
+  }
+
+  /** The gesture becomes a context-menu request at the finger: no pan, no tap on release. */
+  private touchMenuAt(pointer: { x: number; y: number }, rect: DOMRect): void {
+    this.drag = { kind: 'touchCrosshair' };
+    this.host.contextMenu!({
+      x: pointer.x,
+      y: pointer.y,
+      clientX: rect.left + pointer.x,
+      clientY: rect.top + pointer.y,
+      source: 'touch',
+      pointerType: 'touch',
+      shiftKey: false,
+      ctrlKey: false,
+      altKey: false,
+      metaKey: false,
+    });
+  }
+
+  /**
+   * A touch held still on an object a plugin captured (a drawing, an order line) opens the context menu
+   * when the plugin agrees (`ChartInputHandler.longPress`).
+   */
+  private startCapturedLongPress(event: PointerEvent, handler: ChartInputHandler): void {
+    if (event.pointerType !== 'touch' || !handler.longPress) return;
+    if (!this.host.interactionOptions().touchContextMenu || this.host.contextMenu === undefined)
+      return;
+    const rect = this.element.getBoundingClientRect();
+    this.cancelLongPress();
+    this.longPressHandle = this.env.setTimeout(() => {
+      this.longPressHandle = null;
+      const pointer = this.pointers.get(event.pointerId);
+      if (!pointer || this.pointers.size !== 1 || this.captured?.handler !== handler) return;
+      let accepted = false;
+      try {
+        accepted = handler.longPress!(this.pointerEvent(event, pointer.x, pointer.y));
+      } catch {
+        accepted = false;
+      }
+      if (!accepted) return;
+      this.cancelCapture();
+      this.touchMenuAt(pointer, rect);
+    }, LONG_PRESS_MS);
   }
 
   private cancelLongPress(): void {

@@ -2,9 +2,9 @@ import { useId, useRef, useState } from 'react';
 import type { ChartUi } from '../chart-ui.js';
 import type { ToolbarItem, ToolbarLocation } from '../layout.js';
 import { LEGEND_FIELDS, MARKER_FIELDS } from '../preferences.js';
-import type { ContextTargetKind, HeaderSection } from '../types.js';
+import type { ActionContext, ContextTargetKind, HeaderSection, UiAction } from '../types.js';
 import type { SettingsField } from '../extensions.js';
-import { downloadFile, formatShortcut } from '../util.js';
+import { downloadFile, formatShortcut, shortcutKeyOf } from '../util.js';
 import { Icon } from './icon.js';
 import { usePreferences, useUiVersion } from './hooks.js';
 
@@ -67,7 +67,9 @@ function comboOf(event: React.KeyboardEvent): string | null {
   if (event.metaKey) parts.push('Meta');
   if (event.altKey) parts.push('Alt');
   if (event.shiftKey) parts.push('Shift');
-  parts.push(event.key.length === 1 ? event.key.toUpperCase() : event.key);
+  // The physical letter when the character does not name it (Alt+B gives "∫" on macOS).
+  const key = shortcutKeyOf(event);
+  parts.push(key.length === 1 ? key.toUpperCase() : key);
   return parts.join('+');
 }
 
@@ -588,10 +590,19 @@ function ShortcutList({ ui }: { ui: ChartUi }) {
   const t = ui.i18n.t.bind(ui.i18n);
   const [recording, setRecording] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
+  // Price actions need a price: they are listed (with a sample price) when their shortcuts are switched on.
+  const priceActions = ui.priceActions;
+  const sample = priceActions?.options.shortcuts ? priceActions.sample() : null;
+  const contextOf = (a: UiAction) =>
+    a.priceAction ? (sample ? ui.context(null, 'shortcut', sample) : null) : ui.context();
   const actions = ui.actions
     .list()
-    .filter((a) => a.run && ui.isAvailable(a))
-    .map((a) => ({ action: a, label: ui.label(a) || a.id }))
+    .map((a) => ({ action: a, context: a.run ? contextOf(a) : null }))
+    .filter(
+      (e): e is { action: UiAction; context: ActionContext } =>
+        e.context !== null && ui.isAvailable(e.action, e.context),
+    )
+    .map(({ action, context }) => ({ action, label: ui.label(action, context) || action.id }))
     .filter(
       ({ label }) => !filter || label.toLocaleLowerCase().includes(filter.toLocaleLowerCase()),
     )

@@ -189,6 +189,8 @@ export class TradingOverlay {
           pointerMove: (e) => this.onPointerMove(e),
           pointerUp: (e) => this.onPointerUp(e),
           pointerCancel: () => this.abortDrag(),
+          // Holding a finger on a line (before dragging it) opens its context menu.
+          longPress: () => this.press !== null && this.drag === null,
           doubleClick: (e) => this.onDoubleClick(e),
           keyDown: (e) => {
             if (e.key === 'Escape' && (this.drag || this.press)) {
@@ -391,6 +393,8 @@ export class TradingOverlay {
     if (key !== null && !this.itemsByKey.has(key)) key = null;
     if (key === this._selected) return;
     this._selected = key;
+    // The selected line keeps its axis label when crowded labels are thinned.
+    this.syncLinePriorities();
     this.emitter.emit('select', { item: key ? (this.itemsByKey.get(key) ?? null) : null });
     this.redraw('overlay');
     this.bump();
@@ -797,18 +801,43 @@ export class TradingOverlay {
             axisLabelVisible: true,
             title: '',
             autoscale: false,
+            axisLabelPriority: this.labelPriority(item),
           }),
         );
         continue;
       }
       const current = line.options();
-      if (current.price !== item.price || current.color !== item.color)
-        line.applyOptions({ price: item.price, color: item.color });
+      const priority = this.labelPriority(item);
+      if (
+        current.price !== item.price ||
+        current.color !== item.color ||
+        current.axisLabelPriority !== priority
+      )
+        line.applyOptions({ price: item.price, color: item.color, axisLabelPriority: priority });
     }
     for (const [key, line] of this.lines) {
       if (keep.has(key)) continue;
       line.remove();
       this.lines.delete(key);
+    }
+  }
+
+  /**
+   * Axis-label priority when the engine thins crowded labels: the selected line above the series' last value
+   * (1), positions above orders, alerts and markers.
+   */
+  private labelPriority(item: TradingItem): number {
+    if (item.key === this._selected) return 2;
+    return item.kind === 'position' && item.part === 'main' ? 0.5 : 0;
+  }
+
+  private syncLinePriorities(): void {
+    for (const [key, line] of this.lines) {
+      const item = this.itemsByKey.get(key);
+      if (!item) continue;
+      const priority = this.labelPriority(item);
+      if (line.options().axisLabelPriority !== priority)
+        line.applyOptions({ axisLabelPriority: priority });
     }
   }
 

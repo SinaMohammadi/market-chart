@@ -151,6 +151,30 @@ describe('display', () => {
     expect(overlay.items().find((i) => i.key === 'order:o2')!.pending).toBe(true);
   });
 
+  it('thins axis labels of a large order book instead of stacking hundreds of them', async () => {
+    overlay = createTradingOverlay(chart);
+    const levels = [0, 0.25, 0.5].map((d) => Math.round((last - 1) * 4) / 4 + d);
+    overlay.setOrders(
+      Array.from({ length: 300 }, (_, i) => order({ id: `o${i}`, price: levels[i % 3]! })),
+    );
+    clearDrawnTexts(canvas('main').getContext('2d')!);
+    await render();
+    const texts = drawnTexts(canvas('main').getContext('2d')!).map((t) => t.text);
+    const formatted = levels.map((p) => overlay!.formatPrice(p));
+    const axisLabels = texts.filter((t) =>
+      formatted.some((f) => t === f || t.startsWith(`${f} +`)),
+    );
+    // A few labels near their prices, one of them saying how many it stands for.
+    expect(axisLabels.length).toBeLessThanOrEqual(6);
+    expect(axisLabels.some((t) => / \+\d+$/.test(t))).toBe(true);
+    // The selected order's label is kept first.
+    overlay.select('order:o7');
+    const raised = candles.priceLines().filter((l) => l.options().axisLabelPriority === 2);
+    expect(raised.map((l) => l.options().price)).toEqual([levels[1]]);
+    overlay.select(null);
+    expect(candles.priceLines().every((l) => l.options().axisLabelPriority === 0)).toBe(true);
+  });
+
   it('batches any number of updates into one rebuild', async () => {
     overlay = createTradingOverlay(chart);
     const changes = vi.fn();
@@ -478,6 +502,109 @@ describe('chart UI integration', () => {
     overlay = null;
     expect(ui.objectTree.sections()).toHaveLength(0);
     expect(ui.actions.get('trading.cancelOrder')).toBeUndefined();
+  });
+
+  it('opens the order menu on a touch long press without moving the order', async () => {
+    ui = new ChartUi(chart);
+    const onModify = vi.fn();
+    overlay = createTradingOverlay(chart, { ui, onModify, onCancel: () => undefined });
+    chart.applyOptions({ interaction: { touchContextMenu: true } });
+    overlay.setOrders([order()]);
+    await render();
+    const y = yOf(order().price);
+    // jsdom has no PointerEvent: mark mouse events as touches.
+    const touch = (type: string, x: number, at: number) => {
+      const el = canvas('overlay');
+      const rect = el.getBoundingClientRect();
+      const event = new MouseEvent(type, {
+        clientX: rect.left + x,
+        clientY: rect.top + at,
+        bubbles: true,
+      });
+      Object.defineProperty(event, 'pointerType', { value: 'touch' });
+      Object.defineProperty(event, 'pointerId', { value: 4 });
+      el.dispatchEvent(event);
+    };
+    vi.useFakeTimers();
+    try {
+      touch('pointerdown', 200, y);
+      touch('pointermove', 201, y + 2);
+      vi.advanceTimersByTime(500);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(ui.menu.state.open).toBe(true);
+    expect(ui.menu.state.target?.object).toMatchObject({ type: 'order', id: 'o1' });
+    touch('pointerup', 201, y + 2);
+    await flush();
+    expect(onModify).not.toHaveBeenCalled();
+  });
+
+  it('routes actions to the overlay that drew the object when several share one UI', async () => {
+    ui = new ChartUi(chart);
+    const cancelA = vi.fn();
+    const cancelB = vi.fn();
+    const editB = vi.fn();
+    overlay = createTradingOverlay(chart, { ui, onCancel: cancelA });
+    const second = createTradingOverlay(chart, { ui, onCancel: cancelB, onEdit: editB });
+    try {
+      // The same id in both overlays (e.g. two accounts), at different prices.
+      overlay.setOrders([order()]);
+      second.setOrders([order({ price: Math.round((last + 3) * 4) / 4, side: 'sell' })]);
+      await render();
+      const labels = () =>
+        ui!.menu.state.entries
+          .filter((e): e is MenuItemEntry => e.type === 'item')
+          .map((e) => e.label);
+      const cancelFrom = async (o: TradingOverlay) => {
+        const box = o.labelBoxes().find((b) => b.key === 'order:o1')!;
+        rightClick(box.left + 4, box.top + 4);
+        const index = ui!.menu.state.entries.findIndex(
+          (e) => e.type === 'item' && e.label === 'Cancel order',
+        );
+        ui!.menu.activate(0, index);
+        ui!.menu.confirm(true);
+        await flush();
+      };
+      await cancelFrom(second);
+      expect(cancelB).toHaveBeenCalledWith(expect.objectContaining({ side: 'sell' }), {
+        kind: 'order',
+        id: 'o1',
+        part: 'main',
+      });
+      expect(cancelA).not.toHaveBeenCalled();
+      await cancelFrom(overlay);
+      expect(cancelA).toHaveBeenCalledWith(expect.objectContaining({ side: 'buy' }), {
+        kind: 'order',
+        id: 'o1',
+        part: 'main',
+      });
+      expect(cancelB).toHaveBeenCalledOnce();
+      // "Modify…" follows the owner's handlers: only the second overlay has onEdit.
+      const boxA = overlay.labelBoxes().find((b) => b.key === 'order:o1')!;
+      rightClick(boxA.left + 4, boxA.top + 4);
+      expect(labels()).not.toContain('Modify…');
+      ui.menu.close();
+      const boxB = second.labelBoxes().find((b) => b.key === 'order:o1')!;
+      rightClick(boxB.left + 4, boxB.top + 4);
+      expect(labels()).toContain('Modify…');
+      ui.menu.close();
+      // One object-tree section per kind lists both overlays' orders with distinct ids.
+      const section = ui.objectTree.sections().filter((s) => s.id === 'trading.orders');
+      expect(section).toHaveLength(1);
+      expect(section[0]!.items().map((r) => r.id)).toEqual(['order:o1', '2/order:o1']);
+      expect(ui.settings.sections().filter((s) => s.id === 'trading')).toHaveLength(1);
+      // Removing the first overlay keeps the actions working for the second.
+      overlay.destroy();
+      overlay = null;
+      expect(ui.actions.get('trading.cancelOrder')).toBeDefined();
+      await cancelFrom(second);
+      expect(cancelB).toHaveBeenCalledTimes(2);
+    } finally {
+      second.destroy();
+    }
+    expect(ui.actions.get('trading.cancelOrder')).toBeUndefined();
+    expect(ui.objectTree.sections()).toHaveLength(0);
   });
 
   it('translates labels with the UI language (Persian)', async () => {

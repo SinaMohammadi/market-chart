@@ -168,6 +168,66 @@ describe('DrawingManager', () => {
     expect(edited.points[1]!.time).toBe(bars[170]!.time);
   });
 
+  it('on touch: larger handles, and a long press opens the context menu instead of moving', () => {
+    vi.useFakeTimers();
+    try {
+      chart.applyOptions({ interaction: { touchContextMenu: true } });
+      const menus: { paneX: number; paneY: number; pane: number | null; source: string }[] = [];
+      chart.on('contextMenu', (e) => menus.push(e));
+      const line = manager.add({
+        type: 'trend-line',
+        points: [
+          { time: bars[120]!.time, price: mid(120) },
+          { time: bars[150]!.time, price: mid(150) },
+        ],
+      });
+      manager.select([line.id]);
+      chart.render();
+      // jsdom has no PointerEvent: mark mouse events as touches.
+      const touch = (type: string, p: { x: number; y: number }) => {
+        const el = overlay();
+        const rect = el.getBoundingClientRect();
+        const event = new MouseEvent(type, {
+          clientX: rect.left + p.x,
+          clientY: rect.top + p.y,
+          bubbles: true,
+        });
+        Object.defineProperty(event, 'pointerType', { value: 'touch' });
+        Object.defineProperty(event, 'pointerId', { value: 9 });
+        el.dispatchEvent(event);
+      };
+      // 12 px beside the end handle: out of reach for a mouse, within reach of a finger.
+      const end = at(150, mid(150));
+      expect(manager.drawingAt({ pane: 0, paneX: end.x + 12, paneY: end.y })).toBeNull();
+      expect(
+        manager.drawingAt({ pane: 0, paneX: end.x + 12, paneY: end.y, pointerType: 'touch' })
+          ?.handle,
+      ).toBe(1);
+      touch('pointerdown', { x: end.x + 12, y: end.y });
+      touch('pointermove', { x: end.x + 12, y: end.y + 60 });
+      touch('pointerup', { x: end.x + 12, y: end.y + 60 });
+      const edited = manager.get(line.id)!;
+      expect(edited.points[1]!.price).not.toBe(mid(150));
+      // Holding a finger on the line opens the menu at that point and leaves the line where it was.
+      const before = edited.points;
+      const a = at(120, before[0]!.price);
+      const b = { x: at(150, 0).x, y: candles.priceToCoordinate(before[1]!.price)! };
+      const onLine = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      touch('pointerdown', onLine);
+      touch('pointermove', { x: onLine.x + 2, y: onLine.y + 1 });
+      vi.advanceTimersByTime(500);
+      expect(menus).toHaveLength(1);
+      expect(menus[0]!.source).toBe('touch');
+      expect(manager.drawingAt({ ...menus[0]!, pointerType: 'touch' })?.drawing.id).toBe(line.id);
+      expect(manager.get(line.id)!.points).toEqual(before);
+      touch('pointerup', { x: onLine.x + 2, y: onLine.y + 1 });
+      expect(manager.get(line.id)!.points).toEqual(before);
+      expect(manager.selection()).toEqual([line.id]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('does not move locked drawings but still selects them', () => {
     const line = manager.add({
       type: 'horizontal-line',

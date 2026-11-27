@@ -72,6 +72,8 @@ export class PluginHost {
       hover: guard(handler.hover, null),
       doubleClick: guard(handler.doubleClick, false),
       keyDown: guard(handler.keyDown, false),
+      // Only when the plugin has it: without it a long press keeps the gesture.
+      ...(handler.longPress ? { longPress: guard(handler.longPress, false) } : {}),
     };
   }
 

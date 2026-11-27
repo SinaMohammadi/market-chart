@@ -279,6 +279,26 @@ describe('price actions and the order ticket', () => {
     expect(create).toHaveBeenCalledWith(expect.objectContaining({ price: expect.any(Number) }));
   });
 
+  it('lists price actions in the shortcut settings with a sample price when their shortcuts are on', async () => {
+    const shortcutRows = async (ui: ChartUi) => {
+      await act(async () => ui.openSettings('shortcuts'));
+      await settle(2);
+      return [...document.querySelectorAll<HTMLElement>('[role="tabpanel"] .mc-ui-list-item')].map(
+        (li) => li.textContent ?? '',
+      );
+    };
+    const last = bars[bars.length - 1]!.close.toFixed(2);
+    let ui = await mount({ alerts: { create: vi.fn() } }, [priceActions({ shortcuts: true })]);
+    const rows = await shortcutRows(ui);
+    const alert = rows.find((r) => r.startsWith('Create alert at'));
+    expect(alert).toBe(`Create alert at ${last}${ui.shortcut(ui.actions.get('price.alert')!)}`);
+    act(() => root.unmount());
+    root = createRoot(container);
+    // Without shortcuts they would do nothing from the keyboard, so they stay out of the list.
+    ui = await mount({ alerts: { create: vi.fn() } }, [priceActions()]);
+    expect((await shortcutRows(ui)).some((r) => r.startsWith('Create alert at'))).toBe(false);
+  });
+
   it('order ticket: simulated label, validation, confirmation, one submission and the result', async () => {
     let finish!: (r: { ok: boolean; message?: string }) => void;
     const submit = vi.fn(() => new Promise<{ ok: boolean; message?: string }>((r) => (finish = r)));

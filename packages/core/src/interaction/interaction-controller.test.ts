@@ -266,6 +266,70 @@ describe('InteractionController', () => {
     expect(host.scrollTime).toHaveBeenCalledTimes(0);
   });
 
+  it('turns a long press on a captured object into a context-menu request when the plugin agrees', () => {
+    const el = fakeElement();
+    const handler = {
+      pointerDown: vi.fn(() => true),
+      pointerMove: vi.fn(),
+      pointerUp: vi.fn(),
+      pointerCancel: vi.fn(),
+      longPress: vi.fn(() => true),
+    };
+    const host = Object.assign(fakeHost(paneHit, { touchContextMenu: true }, [handler]), {
+      contextMenu: vi.fn(() => true),
+    });
+    const clock = fakeEnv();
+    new InteractionController(el, host, clock.env);
+    el.dispatchEvent(pointer('pointerdown', { x: 120, y: 80, pointerType: 'touch' }));
+    // A small tremor of the finger is still a long press.
+    el.dispatchEvent(pointer('pointermove', { x: 122, y: 81, pointerType: 'touch' }));
+    clock.advance(500);
+    expect(handler.longPress).toHaveBeenCalledWith(expect.objectContaining({ x: 122, y: 81 }));
+    expect(handler.pointerCancel).toHaveBeenCalledOnce();
+    expect(host.contextMenu).toHaveBeenCalledWith(
+      expect.objectContaining({ x: 122, y: 81, source: 'touch' }),
+    );
+    el.dispatchEvent(pointer('pointerup', { x: 122, y: 81, pointerType: 'touch' }));
+    expect(handler.pointerUp).not.toHaveBeenCalled();
+    expect(host.click).not.toHaveBeenCalled();
+  });
+
+  it('keeps a captured gesture when the finger moves, the plugin declines or the option is off', () => {
+    const make = (options: Partial<InteractionOptions>, accept: boolean) => {
+      const el = fakeElement();
+      const handler = {
+        pointerDown: vi.fn(() => true),
+        pointerMove: vi.fn(),
+        pointerUp: vi.fn(),
+        pointerCancel: vi.fn(),
+        longPress: vi.fn(() => accept),
+      };
+      const host = Object.assign(fakeHost(paneHit, options, [handler]), {
+        contextMenu: vi.fn(() => true),
+      });
+      const clock = fakeEnv();
+      new InteractionController(el, host, clock.env);
+      el.dispatchEvent(pointer('pointerdown', { x: 120, y: 80, pointerType: 'touch' }));
+      return { el, handler, host, clock };
+    };
+    // Dragging the object.
+    const drag = make({ touchContextMenu: true }, true);
+    drag.el.dispatchEvent(pointer('pointermove', { x: 160, y: 80, pointerType: 'touch' }));
+    drag.clock.advance(500);
+    expect(drag.handler.longPress).not.toHaveBeenCalled();
+    drag.el.dispatchEvent(pointer('pointerup', { x: 160, y: 80, pointerType: 'touch' }));
+    expect(drag.handler.pointerUp).toHaveBeenCalledOnce();
+    // The plugin keeps the gesture (e.g. while placing a new drawing).
+    const declined = make({ touchContextMenu: true }, false);
+    declined.clock.advance(500);
+    expect(declined.host.contextMenu).not.toHaveBeenCalled();
+    expect(declined.handler.pointerCancel).not.toHaveBeenCalled();
+    // Without `touchContextMenu` nothing changes.
+    const off = make({}, true);
+    off.clock.advance(500);
+    expect(off.handler.longPress).not.toHaveBeenCalled();
+  });
+
   it('keeps the touch crosshair when the context-menu option is off', () => {
     const el = fakeElement();
     const host = Object.assign(fakeHost(paneHit), { contextMenu: vi.fn(() => true) });

@@ -13,6 +13,7 @@ import {
   placeSubmenu,
   reorderPlacements,
   searchEntries,
+  shortcutKeyOf,
   sidebarLayout,
   timeframeLabel,
   uiPreferencesProvider,
@@ -20,6 +21,7 @@ import {
 } from './index.js';
 import type { MenuEntry, UiPreferences } from './index.js';
 import { createI18n } from '@market-chart/i18n';
+import { builtInIndicators } from '@market-chart/indicators';
 
 const noop = () => undefined;
 
@@ -438,6 +440,46 @@ describe('utilities', () => {
     expect(
       matchShortcut('Delete', { ...key, key: 'Delete', ctrlKey: false, shiftKey: false }, false),
     ).toBe(true);
+  });
+
+  it('matches letter shortcuts by the physical key when the character does not name it', () => {
+    const none = { ctrlKey: false, metaKey: false, altKey: false, shiftKey: false };
+    // macOS: Alt+B types "∫", Alt+E is a dead key.
+    const macAltB = { ...none, altKey: true, key: '∫', code: 'KeyB' };
+    expect(matchShortcut('Alt+B', macAltB, true)).toBe(true);
+    expect(matchShortcut('Alt+E', { ...none, altKey: true, key: 'Dead', code: 'KeyE' }, true)).toBe(
+      true,
+    );
+    expect(shortcutKeyOf(macAltB)).toBe('b');
+    // Persian layout: Ctrl+Z types the letter on that key.
+    const persianZ = { ...none, ctrlKey: true, key: 'ظ', code: 'KeyZ' };
+    expect(matchShortcut('Mod+Z', persianZ, false)).toBe(true);
+    // Shift+1 types "!".
+    expect(matchShortcut('Shift+1', { ...none, shiftKey: true, key: '!', code: 'Digit1' })).toBe(
+      true,
+    );
+    // AZERTY: the A key sits where QWERTY has Q; the character wins for Latin letters.
+    const azertyA = { ...none, altKey: true, key: 'a', code: 'KeyQ' };
+    expect(matchShortcut('Alt+A', azertyA, false)).toBe(true);
+    expect(matchShortcut('Alt+Q', azertyA, false)).toBe(false);
+    // Modifiers still have to match.
+    expect(matchShortcut('B', macAltB, true)).toBe(false);
+  });
+
+  it('names every built-in indicator in English, Persian and Arabic', () => {
+    const i18n = createI18n();
+    const missing: string[] = [];
+    for (const { type, name } of builtInIndicators) {
+      const key = `indicatorName.${type}` as const;
+      for (const locale of ['en', 'fa', 'ar'])
+        if (!i18n.has(key, locale)) missing.push(`${locale}:${type}`);
+      i18n.setLocale('fa');
+      // Translated, not the English name (Latin abbreviations such as "RSI" may stay inside).
+      if (i18n.has(key, 'fa')) expect(i18n.t(key), type).not.toBe(name);
+      i18n.setLocale('en');
+    }
+    expect(missing).toEqual([]);
+    expect(builtInIndicators.length).toBe(44);
   });
 
   it('labels timeframes in the current language', () => {

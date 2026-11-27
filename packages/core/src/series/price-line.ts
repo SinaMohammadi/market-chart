@@ -13,6 +13,11 @@ export interface PriceLineOptions {
   title: string;
   /** Include the line when auto-scaling, so it stays in view (e.g. indicator levels). */
   autoscale: boolean;
+  /**
+   * Which axis labels stay when crowded labels are thinned: higher first (default 0; series last values
+   * are 1). Labels that are thinned away are counted in a neighbouring label ("101.25 +12").
+   */
+  axisLabelPriority: number;
 }
 
 export const defaultPriceLineOptions: PriceLineOptions = {
@@ -24,6 +29,7 @@ export const defaultPriceLineOptions: PriceLineOptions = {
   axisLabelVisible: true,
   title: '',
   autoscale: false,
+  axisLabelPriority: 0,
 };
 
 export interface PriceLineApi {

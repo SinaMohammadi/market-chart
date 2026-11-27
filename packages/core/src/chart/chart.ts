@@ -706,6 +706,8 @@ class ChartImpl implements ChartApi {
         throw new ChartError('price line lineWidth must be positive');
       if (o.color !== null && typeof o.color !== 'string')
         throw new ChartError('price line color must be a string or null');
+      if (!isFiniteNumber(o.axisLabelPriority))
+        throw new ChartError('price line axisLabelPriority must be a finite number');
       return { ...o, title: String(o.title) };
     };
     let removed = false;
@@ -1162,6 +1164,7 @@ class ChartImpl implements ChartApi {
     const fontSize = this._options.layout.fontSize;
     const tickSpacing = fontSize * 2.6;
     const labelHeight = axisLabelHeight(fontSize);
+    const moreCount = this.localized((n: number) => String(n));
     const buildAxis = (side: AxisSide): AxisFrame | null => {
       if (!axes[side]) return null;
       const id = side === 'left' ? LEFT_SCALE_ID : RIGHT_SCALE_ID;
@@ -1181,7 +1184,13 @@ class ChartImpl implements ChartApi {
         const y = s.scale.priceToCoordinate(price);
         if (!Number.isFinite(y) || y < 0 || y > rect.height) continue;
         const color = s.model.colorAt(last);
-        raw.push({ y, text: s.formatPrice(price), background: color, color: contrastText(color) });
+        raw.push({
+          y,
+          text: s.formatPrice(price),
+          background: color,
+          color: contrastText(color),
+          priority: 1,
+        });
       }
       for (const s of series) {
         const o = s.model.options;
@@ -1199,6 +1208,7 @@ class ChartImpl implements ChartApi {
             text: s.formatPrice(line.options.price),
             background: color,
             color: contrastText(color),
+            priority: line.options.axisLabelPriority,
           });
         }
       }
@@ -1208,7 +1218,12 @@ class ChartImpl implements ChartApi {
         ticks: scale.isEmpty ? [] : scale.ticks(tickSpacing, minMove),
         formatTick: this.localized(tickFormatter(scale, formatter)),
         formatCoordinate: this.localized(coordinateFormatter(scale, formatter)),
-        labels: layoutLabels(raw, labelHeight, rect.height),
+        // Hundreds of order lines in a small range are thinned; a kept label says how many it stands for.
+        labels: layoutLabels(raw, labelHeight, rect.height, 1, { thin: true }).map((label) =>
+          label.count > 1
+            ? { ...label, text: `${label.text} +${moreCount(label.count - 1)}` }
+            : label,
+        ),
       };
     };
     const left = buildAxis('left');

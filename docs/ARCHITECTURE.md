@@ -268,7 +268,9 @@ definition (schema + outputs + create)  ──►  IndicatorRunner  ──►  I
 - **Tools** are stateless definitions: `draw`, `distance` (hit testing), and optionally `handles`, `moveHandle`,
   `seed` (one-click tools) and `compute` (data-derived values, cached by drawing identity and data version).
 - **Input**: a plugin input handler (core `addInputHandler`) captures gestures before the chart pans, so drawing
-  and panning never conflict; uncaptured clicks fall through to the chart.
+  and panning never conflict; uncaptured clicks fall through to the chart. A touch held still on a drawing
+  becomes a context-menu request through the handler's `longPress` (with `interaction.touchContextMenu`);
+  handles are larger after a touch.
 - **Rendering**: per-pane layers. Resting drawings are on the `above` layer of the main surface; the draft and the
   drawings being dragged are on the `top` layer, repainted with overlay-only redraws.
 - **History**: change sets of `{ before, after }` record pairs (records are immutable), one per user action.
