@@ -584,3 +584,26 @@ describe('time axis: calendar axis and session marks', () => {
     expect(chart.timeScale().options().calendar).toBe(true);
   });
 });
+
+describe('reserved areas', () => {
+  it('reports overlaps per pane and survives a failing provider', () => {
+    ui = new ChartUi(chart);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const off = ui.reservedAreas.register((pane) =>
+      pane === 0 ? [{ left: 100, top: 50, width: 80, height: 20 }] : [],
+    );
+    ui.reservedAreas.register(() => {
+      throw new Error('broken provider');
+    });
+    const at = (left: number, top: number, pane = 0) =>
+      ui.reservedAreas.overlaps(pane, { left, top, width: 20, height: 20 });
+    expect(at(170, 60)).toBe(true);
+    expect(at(181, 60)).toBe(false); // just right of the area
+    expect(at(170, 71)).toBe(false); // just below
+    expect(at(170, 60, 1)).toBe(false); // another pane
+    expect(errors).toHaveBeenCalled();
+    off();
+    expect(at(170, 60)).toBe(false);
+    errors.mockRestore();
+  });
+});

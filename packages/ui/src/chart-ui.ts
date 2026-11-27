@@ -40,6 +40,7 @@ import type {
   ContextTargetKind,
   HeaderSection,
   PriceContext,
+  ReservedArea,
   UiAction,
   UiActionDefinition,
 } from './types.js';
@@ -127,6 +128,7 @@ export class ChartUi {
   private readonly slots: FeatureSlots = { symbols: null, priceActions: null, orderTicket: null };
   private readonly features = new Map<string, () => void>();
   private readonly resolvers: TargetResolver[] = [];
+  private readonly reservedProviders: ((pane: number) => readonly ReservedArea[])[] = [];
   private readonly interceptors: ContextMenuInterceptor[] = [];
   private readonly keyHandlers: KeyHandler[] = [];
   private priceResolver: ((target: ContextTarget) => PriceContext | null) | null = null;
@@ -149,6 +151,39 @@ export class ChartUi {
   } = {
     register: (section) => this.treeSections.register(section),
     sections: () => this.treeSections.list(),
+  };
+
+  /**
+   * Parts of a pane that have their own controls, such as order labels with a × button. Floating controls
+   * (the price-axis "+" button) stay off them, so a click reaches what the user aimed at. Providers return
+   * rectangles relative to the pane and are asked on every check, so they can follow scrolling.
+   */
+  readonly reservedAreas: {
+    register(provider: (pane: number) => readonly ReservedArea[]): Unsubscribe;
+    /** Whether a rectangle (relative to `pane`) overlaps a reserved area. */
+    overlaps(pane: number, area: ReservedArea): boolean;
+  } = {
+    register: (provider) => addTo(this.reservedProviders, provider, false),
+    overlaps: (pane, area) => {
+      for (const provider of this.reservedProviders) {
+        let areas: readonly ReservedArea[];
+        try {
+          areas = provider(pane);
+        } catch (error) {
+          this.reportError(error, 'reservedAreas');
+          continue;
+        }
+        for (const r of areas)
+          if (
+            area.left < r.left + r.width &&
+            r.left < area.left + area.width &&
+            area.top < r.top + r.height &&
+            r.top < area.top + area.height
+          )
+            return true;
+      }
+      return false;
+    },
   };
 
   /**

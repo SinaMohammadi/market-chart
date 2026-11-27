@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import type { ChartUi } from '../chart-ui.js';
 import type { TicketField } from '../types.js';
+import { PRICE_BUTTON_GAP, PRICE_BUTTON_SIZE } from '../types.js';
 import { Dialog } from './dialog.js';
 import { useOrderTicket, usePriceButton } from './feature-hooks.js';
 import { useThemeName } from './hooks.js';
@@ -17,14 +18,14 @@ export function PriceActionButton({ ui }: { ui: ChartUi }) {
   const state = usePriceButton(ui);
   const actions = ui.priceActions;
   if (!state || !actions) return null;
-  const size = 20;
+  const size = PRICE_BUTTON_SIZE;
   return (
     <button
       type="button"
       className="mc-ui-btn mc-ui-price-btn"
       aria-label={ui.i18n.t('price.button', { price: state.price.formatted })}
       title={ui.i18n.t('price.button', { price: state.price.formatted })}
-      style={{ top: state.y, left: state.axisX - size - 3 }}
+      style={{ top: state.y, left: state.axisX - size - PRICE_BUTTON_GAP }}
       onPointerEnter={() => actions.hold(true)}
       onPointerLeave={() => actions.hold(false)}
       onClick={(e) => {

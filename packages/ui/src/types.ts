@@ -85,6 +85,18 @@ export interface SessionCapability {
   subscribe?(listener: () => void): Unsubscribe;
 }
 
+/** Size of the "+" button and its gap to the price axis (CSS px), shared with the React button. */
+export const PRICE_BUTTON_SIZE = 20;
+export const PRICE_BUTTON_GAP = 3;
+
+/** A rectangle in CSS px relative to a pane's top-left corner (see `ChartUi.reservedAreas`). */
+export interface ReservedArea {
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 export interface ChartUiCapabilities {
   /**
    * Indicators. With a `session` capability or a session time-zone preference other than `exchange`, the

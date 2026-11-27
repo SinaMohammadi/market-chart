@@ -9,7 +9,7 @@ import {
   generateBars,
   installCanvasMock,
 } from '@market-chart/testing';
-import { ChartUi } from '@market-chart/ui';
+import { ChartUi, priceActions } from '@market-chart/ui';
 import type { MenuItemEntry } from '@market-chart/ui';
 import { createTradingOverlay } from './index.js';
 import type { TradingOrder, TradingOverlay } from './index.js';
@@ -502,6 +502,30 @@ describe('chart UI integration', () => {
     overlay = null;
     expect(ui.objectTree.sections()).toHaveLength(0);
     expect(ui.actions.get('trading.cancelOrder')).toBeUndefined();
+  });
+
+  it('keeps the price-axis "+" button off order labels, so the × cancels the order', async () => {
+    ui = new ChartUi(chart, {
+      features: [priceActions()],
+      capabilities: { alerts: { create: () => undefined } },
+    });
+    const onCancel = vi.fn();
+    overlay = createTradingOverlay(chart, { ui, onCancel });
+    overlay.setOrders([order()]);
+    await render();
+    const box = boxOf('order:o1');
+    // Pointing at the order's × (the right end of its label, next to the price axis).
+    // The crosshair (and the button) follow the pointer when the chart draws a frame.
+    pointer('pointermove', { x: box.left + box.width - 6, y: box.top + box.height / 2 });
+    chart.render();
+    expect(ui.priceActions!.button()).toBeNull();
+    pointer('pointerdown', { x: box.left + box.width - 6, y: box.top + box.height / 2 });
+    pointer('pointerup', { x: box.left + box.width - 6, y: box.top + box.height / 2 });
+    expect(onCancel).toHaveBeenCalledOnce();
+    // Away from the labels the button is there as usual.
+    pointer('pointermove', { x: 200, y: yOf(last + 6) });
+    chart.render();
+    expect(ui.priceActions!.button()).not.toBeNull();
   });
 
   it('opens the order menu on a touch long press without moving the order', async () => {

@@ -14,10 +14,12 @@ import type {
   ContextTarget,
   ContextTargetKind,
   PriceContext,
+  ReservedArea,
   SubmenuItem,
   UiAction,
   UiActionDefinition,
 } from './types.js';
+import { PRICE_BUTTON_GAP, PRICE_BUTTON_SIZE } from './types.js';
 import { copyText, matchShortcut } from './util.js';
 import type { KeyLike } from './util.js';
 
@@ -297,7 +299,33 @@ export class PriceActions {
     }
     const chart = this.ui.chart;
     const right = chart.priceScale('right', event.pane!).width();
-    this.setButton({ y: event.point!.y, axisX: chart.size().width - right, price });
+    const axisX = chart.size().width - right;
+    const y = event.point!.y;
+    // Not over something with its own controls (an order label's × button): the click must reach it.
+    if (this.ui.reservedAreas.overlaps(event.pane!, this.buttonArea(event.pane!, axisX, y))) {
+      this.setButton(null);
+      return;
+    }
+    this.setButton({ y, axisX, price });
+  }
+
+  /** The button's rectangle relative to its pane (it is drawn just inside the price axis, centred on `y`). */
+  private buttonArea(pane: number, axisX: number, y: number): ReservedArea {
+    const chart = this.ui.chart;
+    const separator = chart.options().panes.separatorHeight;
+    let top = 0;
+    for (const p of chart.panes()) {
+      if (p.index >= pane) break;
+      top += p.height() + separator;
+    }
+    const left = chart.priceScale('left', pane).width();
+    const half = PRICE_BUTTON_SIZE / 2;
+    return {
+      left: axisX - PRICE_BUTTON_SIZE - PRICE_BUTTON_GAP - left,
+      top: y - half - top,
+      width: PRICE_BUTTON_SIZE,
+      height: PRICE_BUTTON_SIZE,
+    };
   }
 
   /** @internal Shortcut handling (wired by the feature when `shortcuts` is on). */

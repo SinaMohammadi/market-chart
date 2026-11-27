@@ -105,6 +105,11 @@ export function attachTradingUi(overlay: TradingOverlay, ui: ChartUi): Unsubscri
     };
   });
 
+  // The order labels have their own controls (the × button): keep the price-axis "+" button off them.
+  const offReserved = ui.reservedAreas.register((pane) => {
+    const series = overlay.series();
+    return series && (series.options().pane ?? 0) === pane ? overlay.labelBoxes() : [];
+  });
   notify(shared);
 
   let attached = true;
@@ -112,6 +117,7 @@ export function attachTradingUi(overlay: TradingOverlay, ui: ChartUi): Unsubscri
     if (!attached) return;
     attached = false;
     offTarget();
+    offReserved();
     const index = shared.overlays.indexOf(overlay);
     if (index >= 0) shared.overlays.splice(index, 1);
     if (!shared.overlays.length) {

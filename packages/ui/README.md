@@ -497,9 +497,7 @@ panel is loaded lazily in its own chunk.
   thousand, because the engine caps visible bars), once per change batch.
 - Symbol search: type-to-search uses letters and digits only (other keys stay with the chart and shortcuts).
   The favourite star inside a result row is not in the tab order; the keyboard path is `Mod+D`.
-- Price-action shortcuts compare `event.key`: on macOS, `Alt`+letter produces another character, so define
-  `Mod`- or `Shift`-based shortcuts there.
 - The "+" button follows the crosshair; keyboard users reach price actions through the context menu
-  (ContextMenu key or Shift+F10) and the shortcuts.
-- Price actions are not listed in the shortcut settings (they need a price); their shortcuts are set on the
-  definition or with `ui.actions.override`.
+  (ContextMenu key or Shift+F10) and the shortcuts. It stays hidden over areas registered with
+  `ui.reservedAreas.register(provider)` (the trading overlay's order labels, so their × button stays
+  clickable); a provider returns rectangles relative to a pane.

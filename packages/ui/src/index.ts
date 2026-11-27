@@ -102,6 +102,7 @@ export type {
   CapabilityName,
   ChartUiCapabilities,
   SessionCapability,
+  ReservedArea,
   Choice,
   ContextTarget,
   ContextTargetKind,
