@@ -126,6 +126,9 @@ export const ar: Record<TranslationKey, Message> = {
   'axis.settings': 'إعدادات المحور…',
   'axis.resetTime': 'إعادة تعيين محور الوقت',
   'axis.timeVisible': 'إظهار الوقت',
+  'axis.calendar': 'محور زمني تقويمي (إظهار أوقات الإغلاق)',
+  'axis.sessionBreaks': 'فواصل الجلسات',
+  'axis.closedShading': 'تظليل خارج ساعات التداول',
 
   'header.label': 'شريط أدوات الرسم البياني',
   'header.symbol': 'الرمز',

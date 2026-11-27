@@ -561,3 +561,26 @@ describe('session time zone', () => {
     ).toBe('exchange');
   });
 });
+
+describe('time axis: calendar axis and session marks', () => {
+  it('offers the calendar axis, and session breaks and shading once a session is known', () => {
+    ui = new ChartUi(chart, { capabilities: { indicators } });
+    const axisLabels = () =>
+      ui.contextMenu
+        .entriesFor({ kind: 'timeAxis', event: null as never, pane: null, time: null, price: null })
+        .filter((e): e is Extract<MenuEntry, { type: 'item' }> => e.type === 'item')
+        .map((e) => e.label);
+    expect(axisLabels()).toContain('Calendar time axis (show closed time)');
+    expect(axisLabels()).not.toContain('Session breaks');
+    // The UI gives the chart the same session as the indicators.
+    const nyse = createTradingSession({ hours: '0930-1600:12345', timeZone: 'America/New_York' });
+    ui.setCapabilities({ session: { value: () => nyse } });
+    expect(chart.timeScale().session()).toBe(nyse);
+    expect(indicators.session()).toBe(nyse);
+    expect(axisLabels()).toEqual(
+      expect.arrayContaining(['Session breaks', 'Shade outside trading hours']),
+    );
+    void ui.actions.execute('axis.calendar', 'contextMenu');
+    expect(chart.timeScale().options().calendar).toBe(true);
+  });
+});

@@ -493,6 +493,51 @@ export function axisActions(): UiActionDefinition[] {
       },
     },
     {
+      id: 'axis.calendar',
+      label: 'axis.calendar',
+      icon: 'ruler',
+      category: 'axis',
+      targets: ['timeAxis'],
+      locations: ['contextMenu'],
+      order: 30,
+      isActive: (ctx) => ctx.chart.timeScale().options().calendar,
+      run: (ctx) => {
+        const ts = ctx.chart.timeScale();
+        ts.applyOptions({ calendar: !ts.options().calendar });
+      },
+    },
+    {
+      id: 'axis.sessionBreaks',
+      label: 'axis.sessionBreaks',
+      icon: 'dot',
+      category: 'axis',
+      targets: ['timeAxis'],
+      locations: ['contextMenu'],
+      order: 31,
+      // Only with a trading session (the symbol's, or one set on the chart).
+      isVisible: (ctx) => ctx.chart.timeScale().session() !== null,
+      isActive: (ctx) => ctx.chart.timeScale().options().sessionBreaks,
+      run: (ctx) => {
+        const ts = ctx.chart.timeScale();
+        ts.applyOptions({ sessionBreaks: !ts.options().sessionBreaks });
+      },
+    },
+    {
+      id: 'axis.closedShading',
+      label: 'axis.closedShading',
+      icon: 'eye',
+      category: 'axis',
+      targets: ['timeAxis'],
+      locations: ['contextMenu'],
+      order: 32,
+      isVisible: (ctx) => ctx.chart.timeScale().session() !== null,
+      isActive: (ctx) => ctx.chart.timeScale().options().closedShading,
+      run: (ctx) => {
+        const ts = ctx.chart.timeScale();
+        ts.applyOptions({ closedShading: !ts.options().closedShading });
+      },
+    },
+    {
       id: 'axis.settings',
       label: 'axis.settings',
       icon: 'settings',

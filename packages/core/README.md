@@ -85,6 +85,16 @@ nyse.withTimeZone('local'); // the same hours read in another zone (useful for 2
 resolveSessionTimeZone('chart', { exchange, chart, application }); // a user's choice → zone
 ```
 
+The time axis gives every bar one slot by default, so nights and weekends take no space. For a calendar axis,
+where time runs evenly and closed time shows as a gap, turn on `calendar` (the slot length is the most common
+distance between bars, or `calendarStep`; gaps longer than `calendarMaxGapBars` slots are shortened). With a
+session the chart can also mark where each session opens and shade time outside trading hours:
+
+```ts
+chart.timeScale().applyOptions({ calendar: true, sessionBreaks: true, closedShading: true });
+chart.timeScale().setSession(nyse); // @market-chart/ui does this with the session in the user's time zone
+```
+
 ## Large datasets
 
 ```ts

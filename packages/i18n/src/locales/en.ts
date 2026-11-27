@@ -119,6 +119,9 @@ export const en = {
   'axis.settings': 'Axis settings…',
   'axis.resetTime': 'Reset time scale',
   'axis.timeVisible': 'Show time',
+  'axis.calendar': 'Calendar time axis (show closed time)',
+  'axis.sessionBreaks': 'Session breaks',
+  'axis.closedShading': 'Shade outside trading hours',
 
   // ── header
   'header.label': 'Chart toolbar',

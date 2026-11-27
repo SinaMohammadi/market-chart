@@ -1,3 +1,4 @@
+import type { SessionMarks } from './session-marks.js';
 import type { Timeline } from '../model/timeline.js';
 import type { Rect } from '../model/types.js';
 import type { ChartOptions, CrosshairLineOptions } from '../options/chart-options.js';
@@ -55,6 +56,8 @@ export interface FrameState {
   readonly timeline: Timeline;
   readonly timeScale: TimeScale;
   readonly timeTicks: readonly TimeTick[];
+  /** Session breaks and closed time (with a session and `sessionBreaks` / `closedShading`). */
+  readonly sessionMarks: SessionMarks | null;
   readonly panes: readonly PaneFrame[];
   readonly plugins: PluginHost;
   readonly coordinates: (pane: number) => PaneLayerCoordinates;
@@ -173,6 +176,18 @@ function drawGrid(
   const { pixelRatio: pr, options, theme } = frame;
   const width = lineWidthPx(pr);
   const { horzLines, vertLines } = options.grid;
+  const marks = frame.sessionMarks;
+  if (marks?.closed.length) {
+    // Behind everything: a faint band over time outside trading hours.
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = theme.gridColor;
+    for (const r of marks.closed) {
+      const x0 = Math.round(r.from * pr);
+      ctx.fillRect(x0, 0, Math.max(1, Math.round(r.to * pr) - x0), h);
+    }
+    ctx.restore();
+  }
   if (horzLines.visible) {
     ctx.fillStyle = horzLines.color ?? theme.gridColor;
     for (const tick of paneFrame.gridTicks) {
@@ -184,6 +199,11 @@ function drawGrid(
     for (const tick of frame.timeTicks) {
       styledVerticalLine(ctx, Math.round(tick.x * pr), 0, h, width, vertLines.style, pr);
     }
+  }
+  if (marks?.breaks.length) {
+    ctx.fillStyle = theme.borderColor;
+    for (const x of marks.breaks)
+      styledVerticalLine(ctx, Math.round(x * pr), 0, h, width, 'dashed', pr);
   }
 }
 

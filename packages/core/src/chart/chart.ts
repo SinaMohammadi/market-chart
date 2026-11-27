@@ -1,3 +1,5 @@
+import { sessionMarks } from './session-marks.js';
+import type { TradingSession } from '../time/session.js';
 import { EventEmitter } from '../events/emitter.js';
 import { Timeline } from '../model/timeline.js';
 import type {
@@ -209,6 +211,8 @@ class ChartImpl implements ChartApi {
   private _theme: ChartTheme;
   private formatters: ChartFormatters = {};
   private readonly timeline = new Timeline();
+  /** Trading session for session breaks and closed-time shading (`timeScale().setSession`). */
+  private _session: TradingSession | null = null;
   private readonly _timeScale: TimeScale;
   private readonly _panes: Pane[] = [];
   private readonly models: SeriesModel[] = [];
@@ -268,6 +272,7 @@ class ChartImpl implements ChartApi {
     this.mainSurface = canvas2dBackend.createSurface(this.root, 'main');
     this.overlaySurface = canvas2dBackend.createSurface(this.root, 'overlay');
 
+    this.applyCalendar();
     this._timeScale = new TimeScale(this.timeline, this._options.timeScale, () =>
       this.onViewportChange(),
     );
@@ -450,6 +455,22 @@ class ChartImpl implements ChartApi {
         return logical === null ? null : ts.indexToX(logical);
       },
       coordinateToLogical: (x: number) => ts.xToLogical(x),
+      setSession: (session: TradingSession | null) => {
+        if (
+          session !== null &&
+          (typeof session !== 'object' ||
+            typeof (session as Partial<TradingSession>).isOpen !== 'function' ||
+            typeof (session as Partial<TradingSession>).sessionDay !== 'function')
+        )
+          throw new ChartError(
+            'setSession() expects a TradingSession (createTradingSession) or null',
+          );
+        if (session === this._session) return;
+        this._session = session;
+        this.invalidate(Invalidate.Main);
+      },
+      session: () => this._session,
+      calendarStep: () => this.timeline.calendarStep,
       logicalToCoordinate: (logical: number) => ts.indexToX(logical),
       timeToLogical: (time: number) => timeToLogical(timeline, time),
       logicalToTime: (logical: number) => logicalToTime(timeline, logical),
@@ -802,6 +823,14 @@ class ChartImpl implements ChartApi {
    * bar and — when the latest bar is scrolled out of view — the time of the bar at the right edge.
    * Times, not indices: indices of existing bars shift when timestamps are inserted before them.
    */
+  /** Passes the calendar-axis options to the timeline (applied by its next rebuild). */
+  private applyCalendar(): void {
+    const ts = this._options.timeScale;
+    this.timeline.setCalendar(
+      ts.calendar ? { step: ts.calendarStep, maxGapBars: ts.calendarMaxGapBars } : null,
+    );
+  }
+
   private viewAnchor(): ViewAnchor {
     const timeline = this.timeline;
     const prevLast = timeline.lastIndex;
@@ -857,6 +886,15 @@ class ChartImpl implements ChartApi {
       this.root.dir = next.localization.direction;
     }
     if (next.timeScale !== prev.timeScale) this._timeScale.applyOptions(next.timeScale);
+    const calendarOf = (o: ChartOptions) =>
+      `${o.timeScale.calendar}|${o.timeScale.calendarStep}|${o.timeScale.calendarMaxGapBars}`;
+    if (calendarOf(next) !== calendarOf(prev)) {
+      // Empty slots appear or disappear: rebuild the timeline and keep the view on the same times.
+      const anchor = this.viewAnchor();
+      this.applyCalendar();
+      this.timeline.rebuild(this.stores());
+      this.afterTimelineChange(anchor);
+    }
     if (next.ariaLabel !== prev.ariaLabel || next.interaction !== prev.interaction)
       this.applyAccessibility();
     if (
@@ -1097,6 +1135,15 @@ class ChartImpl implements ChartApi {
       ? this.tickGenerator.ticks(this.timeline, this._timeScale, measure('00:00:00') + 24)
       : [];
 
+    const session = this._session;
+    const marks =
+      session && (o.timeScale.sessionBreaks || o.timeScale.closedShading)
+        ? sessionMarks(session, this.timeline, this._timeScale, {
+            breaks: o.timeScale.sessionBreaks,
+            closed: o.timeScale.closedShading,
+          })
+        : null;
+
     return {
       pixelRatio: pr,
       layout,
@@ -1106,6 +1153,7 @@ class ChartImpl implements ChartApi {
       timeline: this.timeline,
       timeScale: this._timeScale,
       timeTicks,
+      sessionMarks: marks,
       panes: paneFrames,
       plugins: this.plugins,
       coordinates: (paneIndex) => this.layerCoordinates(paneIndex),

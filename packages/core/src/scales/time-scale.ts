@@ -20,6 +20,19 @@ export interface TimeScaleOptions {
   /** Show hours/minutes in crosshair labels. `'auto'` decides from the data interval. */
   timeVisible: boolean | 'auto';
   secondsVisible: boolean;
+  /**
+   * Calendar axis: time runs evenly, so weekends, nights and other closed times take space (empty slots
+   * at the bar interval). Default false: every bar takes one slot and closed times are skipped.
+   */
+  calendar: boolean;
+  /** Slot length of the calendar axis in ms; null uses the most common distance between bars. */
+  calendarStep: number | null;
+  /** Longest gap on the calendar axis, in slots (longer gaps are shortened). Default 5000. */
+  calendarMaxGapBars: number;
+  /** Vertical lines where each trading session opens. Needs a session (`timeScale().setSession`). */
+  sessionBreaks: boolean;
+  /** Shade times outside trading hours (closed time on the calendar axis, pre- and after-market bars). */
+  closedShading: boolean;
 }
 
 export const defaultTimeScaleOptions: TimeScaleOptions = {
@@ -33,6 +46,11 @@ export const defaultTimeScaleOptions: TimeScaleOptions = {
   visible: true,
   timeVisible: 'auto',
   secondsVisible: false,
+  calendar: false,
+  calendarStep: null,
+  calendarMaxGapBars: 5000,
+  sessionBreaks: false,
+  closedShading: false,
 };
 
 const MIN_VISIBLE_BARS = 2;

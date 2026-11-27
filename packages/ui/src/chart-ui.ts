@@ -425,6 +425,8 @@ export class ChartUi {
       { setSession?(session: TradingSession | null): void } | undefined;
     try {
       indicators?.setSession?.(session);
+      // Session breaks and closed-time shading on the chart follow the same session.
+      this.chart.timeScale().setSession(session);
     } catch (error) {
       this.reportError(error, 'session');
     }

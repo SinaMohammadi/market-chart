@@ -63,6 +63,15 @@ export function validateChartOptions(o: ChartOptions): ChartOptions {
   nonNegative(ts.maxBarSpacing, 'timeScale.maxBarSpacing');
   if (!isFiniteNumber(ts.rightOffset))
     throw new ChartError('timeScale.rightOffset must be a finite number');
+  for (const key of ['calendar', 'sessionBreaks', 'closedShading'] as const)
+    if (typeof ts[key] !== 'boolean') throw new ChartError(`timeScale.${key} must be a boolean`);
+  if (ts.calendarStep !== null) positive(ts.calendarStep, 'timeScale.calendarStep');
+  if (
+    !Number.isInteger(ts.calendarMaxGapBars) ||
+    ts.calendarMaxGapBars < 0 ||
+    ts.calendarMaxGapBars > 1_000_000
+  )
+    throw new ChartError('timeScale.calendarMaxGapBars must be an integer from 0 to 1,000,000');
   validatePriceScaleOptions(o.rightPriceScale, 'rightPriceScale');
   validatePriceScaleOptions(o.leftPriceScale, 'leftPriceScale');
   nonNegative(o.panes.minHeight, 'panes.minHeight');

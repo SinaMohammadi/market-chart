@@ -112,6 +112,9 @@ export const fa: Record<TranslationKey, Message> = {
   'axis.settings': 'تنظیمات محور…',
   'axis.resetTime': 'بازنشانی محور زمان',
   'axis.timeVisible': 'نمایش ساعت',
+  'axis.calendar': 'محور زمان تقویمی (نمایش زمان تعطیل)',
+  'axis.sessionBreaks': 'جداکننده جلسه‌ها',
+  'axis.closedShading': 'سایه بیرون از ساعت معاملات',
 
   'header.label': 'نوار ابزار نمودار',
   'header.symbol': 'نماد',

@@ -1,3 +1,4 @@
+import type { TradingSession } from '../time/session.js';
 import type {
   LogicalRange,
   Point,
@@ -102,6 +103,14 @@ export interface TimeScaleApi {
   /** Fractional bar index at x (bar i is centred at logical i). */
   coordinateToLogical(x: number): number;
   logicalToCoordinate(logical: number): number;
+  /**
+   * Trading session for `sessionBreaks` and `closedShading` (see `createTradingSession`); null removes it.
+   * `@market-chart/ui` passes its session (in the user's chosen time zone) here.
+   */
+  setSession(session: TradingSession | null): void;
+  session(): TradingSession | null;
+  /** Slot length of the calendar axis in ms, or null when it is off. */
+  calendarStep(): number | null;
   /** Fractional bar index of a time (interpolated between bars, extrapolated beyond the data). Null without data. */
   timeToLogical(time: number): number | null;
   /** Inverse of `timeToLogical`. */

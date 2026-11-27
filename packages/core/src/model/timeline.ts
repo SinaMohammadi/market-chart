@@ -9,6 +9,63 @@ export interface TimeSource {
 
 const EMPTY_MAPPING = new Int32Array(0);
 
+/** Calendar axis: empty slots for missing times, so closed hours and weekends take space. */
+export interface CalendarFill {
+  /** Slot length in ms; null detects the most common distance between bars. */
+  readonly step: number | null;
+  /** At most this many empty slots per gap (longer gaps are shortened). */
+  readonly maxGapBars: number;
+}
+
+/** The most common positive distance between consecutive times (the smaller one on ties), or NaN. */
+export function commonStep(times: Float64Array, length: number): number {
+  const counts = new Map<number, number>();
+  for (let i = 1; i < length; i++) {
+    const d = times[i]! - times[i - 1]!;
+    if (d > 0) counts.set(d, (counts.get(d) ?? 0) + 1);
+  }
+  let best = Number.NaN;
+  let bestCount = 0;
+  for (const [d, n] of counts)
+    if (n > bestCount || (n === bestCount && d < best)) {
+      best = d;
+      bestCount = n;
+    }
+  return best;
+}
+
+/** Empty slots between `a` and `b` at `step`: none unless at least two steps apart (month lengths vary). */
+function fillersBetween(a: number, b: number, step: number, max: number): number {
+  const k = Math.round((b - a) / step);
+  if (k < 2) return 0;
+  let n = Math.min(k - 1, max);
+  while (n > 0 && a + n * step >= b) n--;
+  return n;
+}
+
+/** `times` with empty slots added (see `CalendarFill`). */
+function fillCalendar(
+  times: Float64Array<ArrayBuffer>,
+  length: number,
+  step: number,
+  max: number,
+): { times: Float64Array<ArrayBuffer>; length: number } {
+  let extra = 0;
+  for (let i = 1; i < length; i++) extra += fillersBetween(times[i - 1]!, times[i]!, step, max);
+  if (extra === 0) return { times, length };
+  const out = new Float64Array(length + extra);
+  let k = 0;
+  for (let i = 0; i < length; i++) {
+    if (i > 0) {
+      const a = times[i - 1]!;
+      const n = fillersBetween(a, times[i]!, step, max);
+      for (let j = 1; j <= n; j++) out[k++] = a + j * step;
+    }
+    out[k++] = times[i]!;
+  }
+  return { times: out, length: k };
+}
+
 function sameTimes(a: Float64Array, b: Float64Array, length: number): boolean {
   for (let i = 0; i < length; i++) if (a[i] !== b[i]) return false;
   return true;
@@ -32,6 +89,19 @@ export class Timeline {
   private _version = 0;
   /** identity[i] === i for the whole capacity; shared by every store whose times equal the timeline's. */
   private _identity = new Int32Array(0);
+  private _calendar: CalendarFill | null = null;
+  /** Slot length while the calendar axis is on (NaN when off or unknown). */
+  private _step = Number.NaN;
+
+  /** Turns the calendar axis on or off; takes effect with the next `rebuild`. */
+  setCalendar(calendar: CalendarFill | null): void {
+    this._calendar = calendar;
+  }
+
+  /** Slot length of the calendar axis in ms, or null when it is off (or there are too few bars to tell). */
+  get calendarStep(): number | null {
+    return Number.isFinite(this._step) ? this._step : null;
+  }
 
   get length(): number {
     return this._length;
@@ -110,6 +180,16 @@ export class Timeline {
       union = merged;
       unionLength = k;
     }
+    this._step = Number.NaN;
+    if (this._calendar) {
+      const step = this._calendar.step ?? commonStep(union, unionLength);
+      if (Number.isFinite(step) && step > 0) {
+        this._step = step;
+        const filled = fillCalendar(union, unionLength, step, this._calendar.maxGapBars);
+        union = filled.times;
+        unionLength = filled.length;
+      }
+    }
     this._times = union;
     this._length = unionLength;
     this._mappings.clear();
@@ -127,7 +207,13 @@ export class Timeline {
     const time = store.lastTime()!;
     let globalIndex: number;
     if (this._length === 0 || time > this._times[this._length - 1]!) {
-      this.ensureCapacity(this._length + 1);
+      // Calendar axis: empty slots for the time between the previous last bar and this one.
+      const last = this._length > 0 ? this._times[this._length - 1]! : Number.NaN;
+      const n = Number.isFinite(this._step)
+        ? fillersBetween(last, time, this._step, this._calendar!.maxGapBars)
+        : 0;
+      this.ensureCapacity(this._length + n + 1);
+      for (let j = 1; j <= n; j++) this._times[this._length++] = last + j * this._step;
       this._times[this._length] = time;
       globalIndex = this._length++;
     } else {

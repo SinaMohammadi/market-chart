@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Chart, ChartProvider } from '@market-chart/react';
-import { createSyntheticDatafeed } from '@market-chart/datafeed';
+import { createSyntheticDatafeed, datafeedSession } from '@market-chart/datafeed';
 import { DatafeedSeries } from '@market-chart/datafeed/react';
 import type { DatafeedState } from '@market-chart/datafeed/react';
 import {
@@ -59,13 +59,16 @@ function Inner() {
       },
       timeframe: { value: () => timeframe, options: TIMEFRAMES, set: setTimeframe },
       ...(persistence ? { saveLayout: () => persistence.save() } : {}),
+      // The symbol's trading session: VWAP and pivots use its days, and the time-axis menu offers
+      // session breaks and shading (in the time zone chosen under Settings > Language).
+      ...(feed?.controller ? { session: datafeedSession(feed.controller) } : {}),
       alerts: {
         create: ({ price }: { price: number }) =>
           demo.ui?.notify(`Alert created at ${price.toFixed(2)} (demo: no backend)`),
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [symbol, timeframe, persistence],
+    [symbol, timeframe, persistence, feed?.controller],
   );
   const demo = useDemoChart({ preferences, extra });
 
