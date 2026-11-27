@@ -9,6 +9,7 @@ break before 1.0), and every change is described in the package changelogs.
 - [Next: close the verification gaps (0.2)](#next-close-the-verification-gaps-02)
 - [Next: usability fixes (0.2)](#next-usability-fixes-02)
 - [Later: new features (0.3 and after)](#later-new-features-03-and-after)
+- [After 0.3: more chart types (to choose from)](#after-03-more-chart-types-to-choose-from)
 - [Before 1.0](#before-10)
 - [Ongoing for every release](#ongoing-for-every-release)
 
@@ -88,6 +89,46 @@ and a feature-matrix row.
     devices).
 11. **WebGL backend**: only if benchmarks show Canvas 2D limits for real workloads (for example very dense
     heatmaps); the renderer interface already allows it.
+
+## After 0.3: more chart types (to choose from)
+
+Candidates not covered by the existing types (candles, OHLC bars, line with step and dots, area, baseline,
+histogram, Heikin-Ashi, Renko, Line Break, range, tick, spread, Kagi, Point & Figure, hollow and volume
+candles, footprint, order-book heatmap, profiles). A selection is made before work starts.
+
+### Market overview views
+
+Views of many symbols at once rather than one symbol over time. They do not need the time axis, so they would
+likely live in their own package, sharing the canvas, theme, i18n (RTL, digits) and accessibility helpers.
+
+| View                     | What it shows                                                                          |
+| ------------------------ | -------------------------------------------------------------------------------------- |
+| Market map (treemap)     | Tiles sized by market cap or volume, coloured by change, grouped by sector; drill-down |
+| Heat map grid            | Equal tiles per symbol or sector coloured by change (watchlist or sector view)         |
+| Correlation matrix       | Pairwise correlation of returns as a coloured matrix                                   |
+| Calendar heat map        | Daily or monthly returns in a calendar grid                                            |
+| Monthly returns table    | Year × month table of returns, coloured (seasonality at a glance)                      |
+| Performance bars         | Symbols or sectors ranked by change as horizontal bars                                 |
+| Risk/return bubble chart | Volatility against return, bubble size by market cap                                   |
+| Relative rotation graph  | Relative strength against momentum, with each symbol's recent trail                    |
+| Market breadth           | Advancers against decliners, new highs against new lows over time                      |
+
+### Price chart types
+
+| Chart type      | What it shows                                                                    |
+| --------------- | -------------------------------------------------------------------------------- |
+| Spline          | Smooth curved line and area through the closes                                   |
+| Two-colour line | One line coloured by direction (rising/falling) or by side of a level            |
+| Range band      | Filled band between two values per bar (high–low, forecast range)                |
+| Bubble chart    | Dots sized by volume or another value (e.g. large trades)                        |
+| HLC area        | Close line with the high and low as a shaded band                                |
+| High-Low bars   | Bars from low to high only                                                       |
+| Columns         | Closes as columns coloured by up or down bar                                     |
+| Equivolume      | High–low boxes whose width follows volume                                        |
+| Depth chart     | Order-book depth: cumulative bids and asks as stepped areas around the mid price |
+| Sparkline       | Small chart without axes for watchlists and tables                               |
+| Compare symbols | Other symbols overlaid as percent change, with a "Compare" control in the UI     |
+| Seasonals       | Each year's path overlaid on a January–December axis                             |
 
 ## Before 1.0
 
