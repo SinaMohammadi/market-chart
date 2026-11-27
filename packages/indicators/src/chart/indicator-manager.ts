@@ -10,6 +10,7 @@ import type {
   SeriesColumns,
   SeriesData,
   SeriesType,
+  TradingSession,
   Unsubscribe,
 } from '@market-chart/core';
 import { indicatorLabel, resolveParams } from '../params.js';
@@ -17,7 +18,7 @@ import { createDefaultRegistry } from '../builtins.js';
 import type { IndicatorRegistry } from '../registry.js';
 import type { IndicatorResult } from '../runner.js';
 import { IndicatorRunner } from '../runner.js';
-import type { Bar, IndicatorDefinition, OutputSpec } from '../types.js';
+import type { Bar, IndicatorContext, IndicatorDefinition, OutputSpec } from '../types.js';
 import { IndicatorError } from '../types.js';
 
 export interface OutputStyle {
@@ -220,7 +221,7 @@ class IndicatorInstance implements IndicatorHandle {
     this.id = options.id ?? `ind-${++instanceCounter}`;
     this.definition = definition;
     this.source = source;
-    this.runner = new IndicatorRunner(definition, options.params);
+    this.runner = new IndicatorRunner(definition, options.params, manager.context);
     this._style = sanitizeStyle(options.style ?? {}, definition);
     this._visible = options.visible ?? true;
     this.offsets = definition.offsets?.(this.runner.params) ?? {};
@@ -249,7 +250,7 @@ class IndicatorInstance implements IndicatorHandle {
   setParams(patch: Readonly<Record<string, unknown>>): void {
     this.assertAlive();
     const next = resolveParams(this.definition, { ...this.runner.params, ...patch });
-    this.runner = new IndicatorRunner(this.definition, next);
+    this.runner = new IndicatorRunner(this.definition, next, this.manager.context);
     this.offsets = this.definition.offsets?.(this.runner.params) ?? {};
     this.applyStyle();
     this.recompute();
@@ -353,6 +354,13 @@ class IndicatorInstance implements IndicatorHandle {
 
   remove(): void {
     this.manager.remove(this);
+  }
+
+  /** Called by the manager when the session changed: recompute with the new context. */
+  applyContext(context: IndicatorContext): void {
+    if (this._removed || this.runner.context === context) return;
+    this.runner = new IndicatorRunner(this.definition, this.runner.params, context);
+    this.recompute();
   }
 
   /** Called by the manager. */
@@ -798,6 +806,7 @@ export class IndicatorManager {
   private readonly emitter = new EventEmitter<IndicatorManagerEvents>();
   private readonly offs: Unsubscribe[] = [];
   private destroyed = false;
+  private _context: IndicatorContext = { session: null };
   /**
    * Bars of the series whose change is being dispatched, built once and shared by every indicator on it.
    * Scoped to the dispatch, so nothing is retained afterwards.
@@ -889,6 +898,34 @@ export class IndicatorManager {
 
   clear(): void {
     for (const id of [...this.instances.keys()]) this.remove(id);
+  }
+
+  /** @internal What indicators are created with (the session). */
+  get context(): IndicatorContext {
+    return this._context;
+  }
+
+  /** The trading session session-based indicators use (VWAP, pivots, CPR), or null for UTC days. */
+  session(): TradingSession | null {
+    return this._context.session;
+  }
+
+  /**
+   * Sets the trading session (exchange hours in the chosen time zone, see `createTradingSession` and
+   * `TradingSession.withTimeZone`) and recomputes every indicator. Null uses UTC days.
+   */
+  setSession(session: TradingSession | null): void {
+    if (this.destroyed) throw new IndicatorError('indicator manager has been destroyed');
+    if (session === this._context.session) return;
+    this._context = { session };
+    for (const instance of this.instances.values()) {
+      try {
+        instance.applyContext(this._context);
+        this.emitter.emit('changed', { indicator: instance });
+      } catch (error) {
+        this.emitter.emit('error', { error, id: instance.id });
+      }
+    }
   }
 
   serialize(): IndicatorConfig[] {

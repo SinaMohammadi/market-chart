@@ -474,3 +474,26 @@ describe('header overflow', () => {
     }
   });
 });
+
+describe('session time zone setting', () => {
+  it('offers exchange, chart and computer time zones and stores the choice', async () => {
+    const ui = await mount({}, []);
+    await act(async () => ui.openSettings('language'));
+    await settle(2);
+    const label = [...document.querySelectorAll('label')].find(
+      (l) => l.textContent === 'Session time zone',
+    )!;
+    const select = document.getElementById(label.htmlFor) as HTMLSelectElement;
+    // No application time zone was given, so there is no "Application" choice.
+    expect([...select.options].map((o) => o.textContent)).toEqual([
+      'Exchange',
+      'Chart time zone',
+      'This computer',
+    ]);
+    await act(async () => {
+      select.value = 'local';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(ui.preferences.get().sessionTimeZone).toBe('local');
+  });
+});

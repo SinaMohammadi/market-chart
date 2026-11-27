@@ -1,4 +1,10 @@
-import type { ChartApi, OhlcBar, PaneLayerDrawContext, SeriesApi } from '@market-chart/core';
+import type {
+  ChartApi,
+  OhlcBar,
+  PaneLayerDrawContext,
+  SeriesApi,
+  TradingSession,
+} from '@market-chart/core';
 import type {
   MarketProfileOptions,
   TpoSession,
@@ -26,9 +32,25 @@ function barSource(chart: ChartApi, series: SeriesApi): { bars(): OhlcBar[]; dis
   };
 }
 
+const sessionIds = new WeakMap<TradingSession, number>();
+let nextSessionId = 0;
+
+/** Cache-key part for a session: by identity (its holidays are not visible to JSON). */
+function sessionId(session: TradingSession | undefined): number {
+  if (!session) return 0;
+  let id = sessionIds.get(session);
+  if (id === undefined) sessionIds.set(session, (id = ++nextSessionId));
+  return id;
+}
+
 export interface VolumeProfileLayerOptions extends Omit<VolumeProfileOptions, 'from' | 'to'> {
-  /** `visible`: one profile of the visible range; `fixed`: `from`–`to`; `session`: one per UTC day. */
+  /**
+   * `visible`: one profile of the visible range; `fixed`: `from`–`to`; `session`: one per trading day of
+   * `session` (one per UTC day without it).
+   */
   readonly mode: 'visible' | 'fixed' | 'session';
+  /** Trading days for `mode: 'session'` (see `createTradingSession`). */
+  readonly session?: TradingSession;
   readonly from?: number;
   readonly to?: number;
   /** Width of the largest row as a fraction of the available width (default 0.3 for visible mode, 0.9 otherwise). */
@@ -67,7 +89,7 @@ export function addVolumeProfile(
   let cached: VolumeProfile[] = [];
   const compute = (from: number, to: number): VolumeProfile[] => {
     const bars = source.bars();
-    const key = `${options.mode}|${from}|${to}|${bars.length}|${bars[bars.length - 1]?.close}|${JSON.stringify({ ...options, trades: options.trades?.length })}`;
+    const key = `${options.mode}|${from}|${to}|${bars.length}|${bars[bars.length - 1]?.close}|${sessionId(options.session)}|${JSON.stringify({ ...options, trades: options.trades?.length, session: undefined })}`;
     if (key === cacheKey) return cached;
     cacheKey = key;
     const input = (f: number, t: number) => ({
@@ -76,7 +98,10 @@ export function addVolumeProfile(
     });
     const opts = { rows: options.rows, rowSize: options.rowSize, valueArea: options.valueArea };
     if (options.mode === 'session') {
-      cached = sessions(bars.filter((b) => b.time >= from && b.time <= to)).flatMap((group) => {
+      cached = sessions(
+        bars.filter((b) => b.time >= from && b.time <= to),
+        options.session,
+      ).flatMap((group) => {
         const f = group[0]!.time;
         const t = group[group.length - 1]!.time;
         const p = computeVolumeProfile(input(f, t + 1), { ...opts, from: f, to: t });
@@ -202,7 +227,7 @@ export function addMarketProfile(
   let cached: TpoSession[] = [];
   const compute = (): TpoSession[] => {
     const bars = source.bars();
-    const key = `${bars.length}|${bars[bars.length - 1]?.close}|${JSON.stringify(options)}`;
+    const key = `${bars.length}|${bars[bars.length - 1]?.close}|${sessionId(options.session)}|${JSON.stringify({ ...options, session: undefined })}`;
     if (key !== cacheKey) {
       cacheKey = key;
       cached = computeMarketProfile(bars, options);

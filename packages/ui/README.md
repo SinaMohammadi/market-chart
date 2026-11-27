@@ -96,7 +96,10 @@ ui.setCapabilities({
 });
 ```
 
-`indicators` and `drawings` are the existing managers. `<ChartInterface>` itself provides `openSettings`,
+`indicators` and `drawings` are the existing managers. `session` (for example
+`datafeedSession(controller)`) is the symbol's trading session: the UI then gives the indicators the session in
+the time zone the user picks under Language → Session time zone (the exchange's, the chart's, this computer's,
+or `applicationTimeZone` when the application sets one). `ui.session()` returns it. `<ChartInterface>` itself provides `openSettings`,
 `panels`, `indicatorSettings`, `drawingProperties` and `editDrawingText`.
 
 ## Context menus

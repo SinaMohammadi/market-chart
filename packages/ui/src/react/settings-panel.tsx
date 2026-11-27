@@ -353,6 +353,20 @@ export default function SettingsPanel({ ui, category, onCategory }: SettingsPane
               checked={prefs.localDigits}
               onChange={(localDigits) => ui.preferences.update({ localDigits })}
             />
+            <Choice
+              label={t('session.timeZone')}
+              value={prefs.sessionTimeZone}
+              options={(['exchange', 'chart', 'local', 'application'] as const)
+                // "Application" only when the application gave a time zone.
+                .filter((c) => c !== 'application' || ui.applicationTimeZone !== null)
+                .map((c) => [c, t(`session.timeZone.${c}`)] as const)}
+              onChange={(sessionTimeZone) =>
+                ui.preferences.update({
+                  sessionTimeZone: sessionTimeZone as
+                    'exchange' | 'chart' | 'local' | 'application',
+                })
+              }
+            />
           </>
         ) : null}
         {category === 'shortcuts' ? <ShortcutList ui={ui} /> : null}

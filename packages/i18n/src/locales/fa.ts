@@ -26,6 +26,11 @@ export const fa: Record<TranslationKey, Message> = {
   'direction.ltr': 'چپ به راست',
   'direction.rtl': 'راست به چپ',
   'numbers.localDigits': 'نمایش قیمت‌ها و تاریخ‌ها با ارقام فارسی',
+  'session.timeZone': 'منطقه زمانی جلسه معاملاتی',
+  'session.timeZone.exchange': 'بورس',
+  'session.timeZone.chart': 'منطقه زمانی نمودار',
+  'session.timeZone.local': 'این رایانه',
+  'session.timeZone.application': 'برنامه',
 
   'menu.label': 'منوی نمودار',
   'menu.resetView': 'بازنشانی نمای نمودار',

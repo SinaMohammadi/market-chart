@@ -1,4 +1,4 @@
-import type { OhlcBar } from '@market-chart/core';
+import type { OhlcBar, TradingSession } from '@market-chart/core';
 import type { Trade } from './types.js';
 import { ChartsError, assertPositive } from './types.js';
 
@@ -160,15 +160,23 @@ export function computeVolumeProfile(
 
 const DAY = 86_400_000;
 
-/** Splits items into UTC-day sessions (or any fixed session length). */
+/**
+ * Splits items into sessions: the trading days of a `TradingSession` (exchange hours in its time zone;
+ * pre-market and after-hours items join the session they lead into), or fixed lengths from 00:00 UTC
+ * (default one UTC day).
+ */
 export function sessions<T extends { readonly time: number }>(
   items: readonly T[],
-  sessionMs = DAY,
+  by: number | TradingSession = DAY,
 ): T[][] {
   const out: T[][] = [];
   let key = Number.NaN;
+  const keyOf =
+    typeof by === 'number'
+      ? (time: number) => Math.floor(time / by)
+      : (time: number) => by.sessionDay(time);
   for (const item of items) {
-    const k = Math.floor(item.time / sessionMs);
+    const k = keyOf(item.time);
     if (k !== key) {
       out.push([]);
       key = k;
@@ -206,7 +214,10 @@ export interface MarketProfileOptions {
   readonly valueArea?: number;
   /** Periods that form the initial balance (default 2, i.e. the first hour with 30-minute periods). */
   readonly initialBalancePeriods?: number;
+  /** Fixed session length from 00:00 UTC (default one day); ignored when `session` is set. */
   readonly sessionMs?: number;
+  /** Exchange trading days (see `createTradingSession`), instead of UTC days. */
+  readonly session?: TradingSession;
 }
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -226,7 +237,7 @@ export function computeMarketProfile(
   assertPositive(periodMs, 'periodMinutes');
   const share = options.valueArea ?? 0.7;
   const ib = options.initialBalancePeriods ?? 2;
-  const groups = sessions(bars, options.sessionMs ?? DAY);
+  const groups = sessions(bars, options.session ?? options.sessionMs ?? DAY);
   if (!groups.length) return [];
   let rowSize = options.rowSize;
   if (rowSize === undefined) {
@@ -238,9 +249,15 @@ export function computeMarketProfile(
   }
   assertPositive(rowSize, 'rowSize');
   const size = rowSize;
-  return groups.map((group) => {
-    const start =
-      Math.floor(group[0]!.time / (options.sessionMs ?? DAY)) * (options.sessionMs ?? DAY);
+  const session = options.session;
+  // With a session, TPO periods count from the session's open and only bars in trading hours take part.
+  const inHours = session
+    ? groups.map((g) => g.filter((b) => session.isOpen(b.time))).filter((g) => g.length > 0)
+    : groups;
+  return inHours.map((group) => {
+    const start = session
+      ? (session.sessionsOf(session.sessionDay(group[0]!.time))[0]?.open ?? group[0]!.time)
+      : Math.floor(group[0]!.time / (options.sessionMs ?? DAY)) * (options.sessionMs ?? DAY);
     const low = Math.floor(Math.min(...group.map((b) => b.low)) / size) * size;
     const high = Math.max(...group.map((b) => b.high));
     const count = Math.max(1, Math.floor((high - low) / size + 1e-9) + 1);

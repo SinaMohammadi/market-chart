@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { createTradingSession } from '@market-chart/core';
 import type { OhlcBar } from '@market-chart/core';
 import { generateBars, generateOrderBooks, generateTrades } from '@market-chart/testing';
 import { aggregateFootprint, cumulativeVolumeDelta, deltaHistogram } from './orderflow.js';
-import { computeMarketProfile, computeVolumeProfile, valueArea } from './profiles.js';
+import { computeMarketProfile, computeVolumeProfile, sessions, valueArea } from './profiles.js';
 import { heatColor, heatmapEnvelope, kagiEnvelope, pointFigureEnvelope } from './renderers.js';
 import {
   heikinAshi,
@@ -229,5 +230,47 @@ describe('order flow', () => {
     expect(heatmapEnvelope(books)[0]!.value).toBe(100);
     expect(heatColor(0)).toBe('rgb(8, 14, 60)');
     expect(heatColor(1)).toBe('rgb(255, 255, 255)');
+  });
+});
+
+describe('profiles by trading session', () => {
+  // 30-minute bars from Monday 2024-01-08 12:00 UTC to Tuesday 23:30 UTC.
+  const start = Date.parse('2024-01-08T12:00:00Z');
+  const bars: OhlcBar[] = Array.from({ length: 72 }, (_, i) => ({
+    time: start + i * 1_800_000,
+    open: 100,
+    high: 101 + (i % 5),
+    low: 99 - (i % 3),
+    close: 100,
+    volume: 10,
+  }));
+  const nyse = createTradingSession({ hours: '0930-1600:12345', timeZone: 'America/New_York' });
+
+  it('splits by the trading day instead of the UTC day', () => {
+    const utc = sessions(bars);
+    expect(utc.map((g) => new Date(g[0]!.time).toISOString())).toEqual([
+      '2024-01-08T12:00:00.000Z',
+      '2024-01-09T00:00:00.000Z',
+    ]);
+    // New York: the session ends at 21:00 UTC; later bars belong to the next trading day.
+    const ny = sessions(bars, nyse);
+    expect(ny.map((g) => new Date(g[0]!.time).toISOString())).toEqual([
+      '2024-01-08T12:00:00.000Z',
+      '2024-01-08T21:00:00.000Z',
+      '2024-01-09T21:00:00.000Z',
+    ]);
+    expect(ny.flat()).toHaveLength(bars.length);
+  });
+
+  it('builds one market profile per trading day, from the open', () => {
+    expect(computeMarketProfile(bars)).toHaveLength(2);
+    // Regular hours only: periods count from the 09:30 open (14:30 UTC); the last group has only
+    // after-hours bars and gives no profile.
+    const profiles = computeMarketProfile(bars, { session: nyse });
+    expect(profiles.map((p) => new Date(p.start).toISOString())).toEqual([
+      '2024-01-08T14:30:00.000Z',
+      '2024-01-09T14:30:00.000Z',
+    ]);
+    expect(profiles[0]!.periods).toBe(13);
   });
 });

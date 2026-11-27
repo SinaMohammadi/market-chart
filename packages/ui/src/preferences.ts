@@ -1,3 +1,4 @@
+import type { SessionTimeZoneChoice } from '@market-chart/core';
 import { EventEmitter } from '@market-chart/core';
 import type { Unsubscribe } from '@market-chart/core';
 import {
@@ -147,6 +148,11 @@ export interface UiPreferences {
   readonly numerals: 'native' | 'latn';
   /** Locale digits on the chart axes. */
   readonly localDigits: boolean;
+  /**
+   * Time zone of trading sessions (when days start for VWAP, pivots and profiles): the exchange's, the
+   * chart's, this computer's or the application's (see `ChartUiOptions.applicationTimeZone`).
+   */
+  readonly sessionTimeZone: SessionTimeZoneChoice;
   readonly theme: string | null;
   readonly density: Density;
   readonly header: { readonly visible: boolean };
@@ -210,6 +216,7 @@ export function defaultUiPreferences(overrides: UiPreferencesPatch = {}): UiPref
       direction: 'auto',
       numerals: 'native',
       localDigits: false,
+      sessionTimeZone: 'exchange',
       theme: null,
       density: 'comfortable',
       header: { visible: true },
@@ -359,6 +366,11 @@ export function validateUiPreferences(input: unknown): UiPreferences {
     direction: oneOf(p['direction'], ['auto', 'ltr', 'rtl'] as const, d.direction),
     numerals: oneOf(p['numerals'], ['native', 'latn'] as const, d.numerals),
     localDigits: typeof p['localDigits'] === 'boolean' ? p['localDigits'] : d.localDigits,
+    sessionTimeZone: oneOf(
+      p['sessionTimeZone'],
+      ['exchange', 'chart', 'local', 'application'] as const,
+      d.sessionTimeZone,
+    ),
     theme: typeof p['theme'] === 'string' && p['theme'].length <= 40 ? p['theme'] : null,
     density: oneOf(p['density'], ['compact', 'comfortable'] as const, d.density),
     header: { visible: typeof header['visible'] === 'boolean' ? header['visible'] : true },

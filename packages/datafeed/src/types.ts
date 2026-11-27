@@ -33,9 +33,12 @@ export interface SymbolInfo {
   readonly pricePrecision?: number;
   /** Smallest price increment. */
   readonly minMove?: number;
-  /** IANA time zone of the exchange, informational. */
+  /** IANA time zone of the exchange (`session` hours are in this zone; UTC when absent). */
   readonly timezone?: string;
-  /** `24x7` or trading hours such as `0930-1600:23456` (UTC, weekdays 1 = Monday … 7 = Sunday). */
+  /**
+   * `24x7` or trading hours such as `0930-1600:12345` (weekdays 1 = Monday … 7 = Sunday), in `timezone`.
+   * Becomes `DatafeedController.session` (see `createTradingSession` for the format).
+   */
   readonly session?: string;
   readonly timeframes?: readonly Timeframe[];
   /** Earliest available bar (UTC ms); history loading stops there. */

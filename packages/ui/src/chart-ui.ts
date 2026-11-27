@@ -1,5 +1,12 @@
-import { EventEmitter } from '@market-chart/core';
-import type { ChartApi, ContextMenuEvent, ThemeInput, Unsubscribe } from '@market-chart/core';
+import { EventEmitter, createTradingSession, resolveSessionTimeZone } from '@market-chart/core';
+import type {
+  ChartApi,
+  ContextMenuEvent,
+  ThemeInput,
+  TimeZone,
+  TradingSession,
+  Unsubscribe,
+} from '@market-chart/core';
 import { I18n } from '@market-chart/i18n';
 import type { TranslationValues } from '@market-chart/i18n';
 import { builtInActions } from './builtins/index.js';
@@ -59,6 +66,17 @@ export interface ChartUiOptions {
    * bundled) unless it is listed here or installed later with `ui.use`.
    */
   readonly features?: readonly ChartUiFeature[];
+  /**
+   * The application's time zone, offered as a session time-zone choice ("Application") in the settings,
+   * e.g. the zone of the user's account.
+   */
+  readonly applicationTimeZone?: TimeZone;
+}
+
+let continuousUtc: TradingSession | null = null;
+/** A 24x7 session in UTC, re-read in another zone when the user picks one for a continuous market. */
+function continuousSession(): TradingSession {
+  return (continuousUtc ??= createTradingSession({ hours: '24x7' }));
 }
 
 /** Slots filled by the optional features (see `ChartUi.symbols`, `priceActions`, `orderTicket`). */
@@ -96,6 +114,13 @@ export class ChartUi {
   private readonly ownsPreferences: boolean;
   private readonly defaultLocale: string;
   private readonly options: ChartUiOptions;
+  private sessionCache: {
+    readonly source: TradingSession;
+    readonly zone: TimeZone;
+    readonly result: TradingSession | null;
+  } | null = null;
+  /** The session last given to the indicators (undefined: none yet). */
+  private appliedSession: TradingSession | null | undefined = undefined;
   private _version = 0;
   private destroyed = false;
   private capabilityOffs: Unsubscribe[] = [];
@@ -219,6 +244,12 @@ export class ChartUi {
     this.watchCapabilities();
     this.applyPreferences(this.preferences.get());
     this.markers = new PriceMarkers(this);
+    // The session follows the preference, the chart's time zone (for "chart") and the symbol.
+    this.offs.push(
+      this.preferences.on('change', () => this.syncSession()),
+      chart.on('optionsChanged', () => this.syncSession()),
+    );
+    this.syncSession();
 
     const registry = this.registry;
     this.contextMenu = {
@@ -337,6 +368,69 @@ export class ChartUi {
     };
   }
 
+  /** The application time zone (`ChartUiOptions.applicationTimeZone`), or null. */
+  get applicationTimeZone(): TimeZone | null {
+    return this.options.applicationTimeZone ?? null;
+  }
+
+  /**
+   * The trading session in the time zone the user chose (preference `sessionTimeZone`): the symbol's
+   * session (`capabilities.session`) as is for `exchange`, otherwise re-read in the chart's, this
+   * computer's or the application's zone. A continuous market without a session gets a 24x7 session in
+   * that zone, so its days start at that zone's midnight. Null means UTC days.
+   */
+  session(): TradingSession | null {
+    let base: TradingSession | null = null;
+    try {
+      base = this._capabilities.session?.value() ?? null;
+    } catch (error) {
+      this.reportError(error, 'session');
+    }
+    const choice = this.preferences.get().sessionTimeZone;
+    if (choice === 'exchange') return base;
+    const zone = resolveSessionTimeZone(choice, {
+      exchange: base?.timeZone ?? null,
+      chart: this.chart.options().localization.timeZone,
+      application: this.options.applicationTimeZone ?? null,
+    });
+    const source = base ?? continuousSession();
+    const cached = this.sessionCache;
+    // Same object for the same inputs, so indicators are not recomputed for nothing.
+    if (cached && cached.source === source && cached.zone === zone) return cached.result;
+    let result: TradingSession | null;
+    try {
+      result = source.withTimeZone(zone);
+    } catch (error) {
+      this.reportError(error, 'session');
+      result = base;
+    }
+    this.sessionCache = { source, zone, result };
+    return result;
+  }
+
+  private syncSession(): void {
+    if (this.destroyed) return;
+    // Leave an application's own `indicators.setSession` alone until the UI has a say: a session
+    // capability, or a time zone other than the exchange's.
+    if (
+      this.appliedSession === undefined &&
+      !this._capabilities.session &&
+      this.preferences.get().sessionTimeZone === 'exchange'
+    )
+      return;
+    const session = this.session();
+    if (session === this.appliedSession) return;
+    this.appliedSession = session;
+    const indicators = this._capabilities.indicators as
+      { setSession?(session: TradingSession | null): void } | undefined;
+    try {
+      indicators?.setSession?.(session);
+    } catch (error) {
+      this.reportError(error, 'session');
+    }
+    this.bump();
+  }
+
   get capabilities(): ChartUiCapabilities {
     return this._capabilities;
   }
@@ -361,6 +455,11 @@ export class ChartUi {
   setCapabilities(patch: Partial<ChartUiCapabilities>): void {
     this._capabilities = { ...this._capabilities, ...patch };
     this.watchCapabilities();
+    // New indicators or a new session source: apply the current session to them.
+    if (patch.indicators || patch.session) {
+      this.appliedSession = undefined;
+      this.syncSession();
+    }
     // The main series is the first one that is not an indicator output, so it may change with capabilities.
     if (patch.indicators) this.markers.update();
     this.bump();
@@ -764,7 +863,8 @@ export class ChartUi {
   private watchCapabilities(): void {
     for (const off of this.capabilityOffs.splice(0)) off();
     const bump = (): void => this.bump();
-    const { drawings, indicators } = this._capabilities;
+    const { drawings, indicators, session } = this._capabilities;
+    if (session?.subscribe) this.capabilityOffs.push(session.subscribe(() => this.syncSession()));
     if (drawings) {
       this.capabilityOffs.push(
         drawings.on('toolChange', bump),

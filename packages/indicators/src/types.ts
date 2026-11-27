@@ -1,3 +1,4 @@
+import type { TradingSession } from '@market-chart/core';
 import type { LineStyle, PriceFormat } from '@market-chart/core';
 
 /** Normalised input bar. `volume` is NaN when the source has no volume. */
@@ -116,6 +117,15 @@ export interface IndicatorCalculator {
   next(bar: Bar): ArrayLike<number>;
 }
 
+/**
+ * What an indicator may know besides its parameters. `session` is the trading session (exchange hours in
+ * the chosen time zone) for session-based indicators such as VWAP and pivots; null means UTC days.
+ * Read it in the step function's closure, never store it in calculator state (state is deep-copied).
+ */
+export interface IndicatorContext {
+  readonly session: TradingSession | null;
+}
+
 export interface IndicatorDefinition<S extends InputSchema = InputSchema> {
   /** Registry key, e.g. `'rsi'`. Lowercase letters, digits and dashes. */
   readonly type: string;
@@ -134,7 +144,7 @@ export interface IndicatorDefinition<S extends InputSchema = InputSchema> {
   readonly priceFormat?: PriceFormat;
   /** Requires volume in the source data. */
   readonly needsVolume?: boolean;
-  create(params: Params<S>): IndicatorCalculator;
+  create(params: Params<S>, context?: IndicatorContext): IndicatorCalculator;
   /** Cross-field validation beyond the schema. Return an error message or null. */
   validate?(params: Params<S>): string | null;
   /** Plot offset in bars per output id (positive = into the future), e.g. Ichimoku displacement. */

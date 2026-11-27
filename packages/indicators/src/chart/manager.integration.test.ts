@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createChart } from '@market-chart/core';
+import { createChart, createTradingSession } from '@market-chart/core';
 import type { ChartApi, OhlcBar, SeriesApi } from '@market-chart/core';
 import { HOUR, generateBars, installCanvasMock } from '@market-chart/testing';
 import { IndicatorManager, getIndicatorManager } from './indicator-manager.js';
@@ -158,6 +158,35 @@ describe('IndicatorManager', () => {
     expect(restored[0]!.params()).toEqual({ length: 34, source: 'close' });
     expect(restored[0]!.series().get('ma')!.options()).toMatchObject({ color: '#ff0000' });
     expect(restored[1]!.visible()).toBe(false);
+  });
+
+  it('recomputes session-based indicators when the session changes', () => {
+    const manager = new IndicatorManager(chart);
+    const vwapHandle = manager.add('vwap', candles);
+    const rsiHandle = manager.add('rsi', candles);
+    const before = Array.from(vwapHandle.result().values[0]!.slice(0, bars.length));
+    const rsiBefore = Array.from(rsiHandle.result().values[0]!.slice(0, bars.length));
+    const changed = vi.fn();
+    manager.on('changed', changed);
+    const session = createTradingSession({ hours: '24x7', timeZone: 'Asia/Tokyo' });
+    manager.setSession(session);
+    expect(manager.session()).toBe(session);
+    expect(changed).toHaveBeenCalledTimes(2);
+    // VWAP now restarts at Tokyo midnight; RSI has no periods and is unchanged.
+    expect(Array.from(vwapHandle.result().values[0]!.slice(0, bars.length))).not.toEqual(before);
+    expect(Array.from(rsiHandle.result().values[0]!.slice(0, bars.length))).toEqual(rsiBefore);
+    // Indicators added later use it too, and null goes back to UTC days.
+    const later = manager.add('vwap', candles);
+    expect(Array.from(later.result().values[0]!.slice(0, bars.length))).toEqual(
+      Array.from(vwapHandle.result().values[0]!.slice(0, bars.length)),
+    );
+    manager.setSession(null);
+    expect(Array.from(vwapHandle.result().values[0]!.slice(0, bars.length))).toEqual(before);
+    // Realtime updates keep working with the session (calculator snapshots are deep copies).
+    manager.setSession(session);
+    const last = bars[bars.length - 1]!;
+    candles.update({ ...last, close: last.close + 1 });
+    expect(Number.isFinite(vwapHandle.result().values[0]![bars.length - 1]!)).toBe(true);
   });
 
   it('saves and restores the pane an indicator was moved to', () => {

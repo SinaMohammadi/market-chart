@@ -1,3 +1,4 @@
+import type { TradingSession } from '@market-chart/core';
 import { calc, defineIndicator } from '../types.js';
 import type { Bar } from '../types.js';
 import { RollingExtreme } from '../primitives.js';
@@ -16,9 +17,9 @@ class PeriodTracker {
   prevLow = N;
   prevClose = N;
 
-  /** Returns true when `bar` starts a new period. */
-  next(bar: Bar, period: string): boolean {
-    const key = periodKey(bar.time, period);
+  /** Returns true when `bar` starts a new period (of `session` when given, else of the UTC calendar). */
+  next(bar: Bar, period: string, session: TradingSession | null): boolean {
+    const key = periodKey(bar.time, period, session);
     const isNew = key !== this.key;
     if (isNew) {
       if (Number.isFinite(this.key)) {
@@ -43,7 +44,8 @@ export const pivotPoints = defineIndicator({
   type: 'pivots',
   name: 'Pivot Points Standard',
   shortName: 'Pivots',
-  description: 'Levels from the previous UTC day/week/month; constant during the current period.',
+  description:
+    'Levels from the previous trading day, week or month (UTC days without a session); constant during the current period.',
   category: 'advanced',
   placement: 'overlay',
   inputs: {
@@ -64,14 +66,16 @@ export const pivotPoints = defineIndicator({
     { id: 's2', name: 'S2', kind: 'step', color: colors.teal, lineWidth: 1 },
     { id: 's3', name: 'S3', kind: 'step', color: colors.teal, lineWidth: 1 },
   ],
-  create: (p) =>
-    calc(
+  create: (p, context) => {
+    // Read from the closure: calculator state is deep-copied, a session must not be part of it.
+    const session = context?.session ?? null;
+    return calc(
       {
         tracker: new PeriodTracker(),
         levels: [N, N, N, N, N, N, N],
       },
       (s, bar) => {
-        const isNew = s.tracker.next(bar, p.period);
+        const isNew = s.tracker.next(bar, p.period, session);
         if (isNew && Number.isFinite(s.tracker.prevHigh)) {
           const { prevHigh: h, prevLow: l, prevClose: c, open } = s.tracker;
           const range = h - l;
@@ -100,14 +104,16 @@ export const pivotPoints = defineIndicator({
         }
         return s.levels;
       },
-    ),
+    );
+  },
 });
 
 export const cpr = defineIndicator({
   type: 'cpr',
   name: 'Central Pivot Range',
   shortName: 'CPR',
-  description: 'Pivot, top and bottom central levels from the previous UTC day/week/month.',
+  description:
+    'Pivot, top and bottom central levels from the previous trading day, week or month (UTC days without a session).',
   category: 'advanced',
   placement: 'overlay',
   inputs: { period: periodInput },
@@ -117,14 +123,16 @@ export const cpr = defineIndicator({
     { id: 'bottom', name: 'BC', kind: 'step', color: colors.blue, lineWidth: 1 },
   ],
   fills: [{ from: 'top', to: 'bottom', color: 'rgba(41, 98, 255, 0.1)' }],
-  create: (p) =>
-    calc(
+  create: (p, context) => {
+    // Read from the closure: calculator state is deep-copied, a session must not be part of it.
+    const session = context?.session ?? null;
+    return calc(
       {
         tracker: new PeriodTracker(),
         levels: [N, N, N],
       },
       (s, bar) => {
-        const isNew = s.tracker.next(bar, p.period);
+        const isNew = s.tracker.next(bar, p.period, session);
         if (isNew && Number.isFinite(s.tracker.prevHigh)) {
           const { prevHigh: h, prevLow: l, prevClose: c } = s.tracker;
           const pivot = (h + l + c) / 3;
@@ -134,7 +142,8 @@ export const cpr = defineIndicator({
         }
         return s.levels;
       },
-    ),
+    );
+  },
 });
 
 const FIB_RATIOS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1] as const;

@@ -1,3 +1,4 @@
+import type { TradingSession } from '@market-chart/core';
 import { MA_TYPES } from '../primitives.js';
 
 /** Shared input specs. */
@@ -24,8 +25,17 @@ export const NaN3 = [Number.NaN, Number.NaN, Number.NaN];
 
 const DAY = 86_400_000;
 
-/** Period bucket of a UTC timestamp. Weeks start on Monday (1970-01-01 was a Thursday). */
-export function periodKey(time: number, period: string): number {
+/**
+ * Period bucket of a timestamp: the trading day, week or month of `session` when given, otherwise of the
+ * UTC calendar. Weeks start on Monday (1970-01-01 was a Thursday).
+ */
+export function periodKey(
+  time: number,
+  period: string,
+  session: TradingSession | null = null,
+): number {
+  if (session)
+    return session.periodKey(time, period === 'week' || period === 'month' ? period : 'day');
   const day = Math.floor(time / DAY);
   if (period === 'week') return Math.floor((day + 3) / 7);
   if (period === 'month') {

@@ -101,6 +101,7 @@ export type {
   ActionLocation,
   CapabilityName,
   ChartUiCapabilities,
+  SessionCapability,
   Choice,
   ContextTarget,
   ContextTargetKind,

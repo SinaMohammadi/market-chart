@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createChart } from '@market-chart/core';
-import type { ChartApi, SeriesApi } from '@market-chart/core';
+import { createChart, createTradingSession } from '@market-chart/core';
+import type { ChartApi, SeriesApi, TradingSession } from '@market-chart/core';
 import { DrawingManager } from '@market-chart/drawing-tools';
 import { IndicatorManager } from '@market-chart/indicators';
 import { HOUR, generateBars, installCanvasMock } from '@market-chart/testing';
 import { createI18n } from '@market-chart/i18n';
-import { ChartUi, UiPreferencesStore } from './index.js';
+import { ChartUi, UiPreferencesStore, validateUiPreferences } from './index.js';
 import type { LegendItem, MenuEntry } from './index.js';
 
 let restore: () => void = () => undefined;
@@ -488,5 +488,76 @@ describe('legend and price markers', () => {
     ]);
     await items[0]!.run!();
     expect(ui.preferences.get().markers.highLow).toBe(true);
+  });
+});
+
+describe('session time zone', () => {
+  const nyse = createTradingSession({ hours: '0930-1600:12345', timeZone: 'America/New_York' });
+
+  function sessionSource(initial: TradingSession | null) {
+    let value = initial;
+    const listeners = new Set<() => void>();
+    return {
+      capability: {
+        value: () => value,
+        subscribe: (listener: () => void) => {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+      },
+      set(next: TradingSession | null) {
+        value = next;
+        for (const l of listeners) l();
+      },
+    };
+  }
+
+  it("applies the symbol's session in the time zone the user chooses", () => {
+    const source = sessionSource(nyse);
+    chart.applyOptions({ localization: { timeZone: 'Europe/Berlin' } });
+    ui = new ChartUi(chart, {
+      capabilities: { indicators, session: source.capability },
+      applicationTimeZone: 'Asia/Tehran',
+    });
+    expect(ui.session()).toBe(nyse);
+    expect(indicators.session()).toBe(nyse);
+    const zoneAfter = (choice: 'exchange' | 'chart' | 'local' | 'application') => {
+      ui.preferences.update({ sessionTimeZone: choice });
+      return indicators.session()?.timeZone;
+    };
+    expect(zoneAfter('chart')).toBe('Europe/Berlin');
+    expect(zoneAfter('local')).toBe('local');
+    expect(zoneAfter('application')).toBe('Asia/Tehran');
+    // The same object while nothing changes, so indicators are not recomputed for nothing.
+    expect(ui.session()).toBe(indicators.session());
+    expect(indicators.session()!.hours).toBe('0930-1600:12345');
+    // The chart's zone changes: "chart" follows it.
+    ui.preferences.update({ sessionTimeZone: 'chart' });
+    chart.applyOptions({ localization: { timeZone: 'Asia/Tokyo' } });
+    expect(indicators.session()?.timeZone).toBe('Asia/Tokyo');
+    // A new symbol (a continuous market): its days start at midnight of the chosen zone.
+    source.set(null);
+    expect(indicators.session()).toMatchObject({ timeZone: 'Asia/Tokyo', hours: '24x7' });
+    zoneAfter('exchange');
+    expect(indicators.session()).toBeNull();
+  });
+
+  it("leaves the application's own indicator session alone until the UI has a say", () => {
+    const own = createTradingSession({ hours: '0900-1700', timeZone: 'Europe/London' });
+    indicators.setSession(own);
+    ui = new ChartUi(chart, { capabilities: { indicators } });
+    expect(indicators.session()).toBe(own);
+    ui.preferences.update({ sessionTimeZone: 'local' });
+    expect(indicators.session()?.timeZone).toBe('local');
+  });
+
+  it('stores and validates the preference', () => {
+    const store = new UiPreferencesStore();
+    expect(store.get().sessionTimeZone).toBe('exchange');
+    store.update({ sessionTimeZone: 'local' });
+    expect(store.get().sessionTimeZone).toBe('local');
+    expect(
+      validateUiPreferences({ ...store.get(), sessionTimeZone: 'mars' as never }).sessionTimeZone,
+    ).toBe('exchange');
   });
 });

@@ -65,6 +65,26 @@ chart.on('contextMenu', (e) => {
 The engine only reports what was clicked. The browser menu is suppressed while there are `contextMenu`
 listeners. Menus and toolbars are provided by `@market-chart/ui`.
 
+## Trading sessions and time zones
+
+`createTradingSession` describes exchange hours in the exchange's time zone (daylight saving included),
+with holidays and special hours. Indicators, profiles and the datafeed use it to start days at the
+session instead of at midnight UTC.
+
+```ts
+const nyse = createTradingSession({
+  hours: '0930-1600:12345', // ranges:days, 1 = Monday … 7 = Sunday; '1700-1600' opens the evening before
+  timeZone: 'America/New_York',
+  holidays: ['2024-07-04'],
+  specialHours: { '2024-07-03': '0930-1300' },
+});
+nyse.isOpen(time); // in trading hours?
+nyse.sessionDay(time); // trading day; pre-market and after-hours join the session they lead into
+nyse.periodKey(time, 'week'); // also 'day' and 'month'
+nyse.withTimeZone('local'); // the same hours read in another zone (useful for 24x7 markets)
+resolveSessionTimeZone('chart', { exchange, chart, application }); // a user's choice → zone
+```
+
 ## Large datasets
 
 ```ts

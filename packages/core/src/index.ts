@@ -125,3 +125,10 @@ export {
 } from './utils/net.js';
 export type { ResponseLike, UrlParamValue } from './utils/net.js';
 export type { DeepPartial } from './utils/merge.js';
+export {
+  TradingSession,
+  createTradingSession,
+  dateOfDay,
+  resolveSessionTimeZone,
+} from './time/session.js';
+export type { SessionPeriod, SessionTimeZoneChoice, TradingSessionSpec } from './time/session.js';

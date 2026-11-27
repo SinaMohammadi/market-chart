@@ -28,6 +28,11 @@ export const en = {
   'direction.ltr': 'Left to right',
   'direction.rtl': 'Right to left',
   'numbers.localDigits': 'Use local digits for prices and dates',
+  'session.timeZone': 'Session time zone',
+  'session.timeZone.exchange': 'Exchange',
+  'session.timeZone.chart': 'Chart time zone',
+  'session.timeZone.local': 'This computer',
+  'session.timeZone.application': 'Application',
 
   // ── context menu: chart
   'menu.label': 'Chart menu',

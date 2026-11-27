@@ -30,6 +30,11 @@ const saved = indicators.serialize(); // plain JSON
 indicators.restore(saved, (id) => chart.series().find((s) => s.id === id));
 ```
 
+Session-based indicators (VWAP, pivot points, CPR) start their days at midnight UTC. Give the manager a
+trading session to use the exchange's trading days instead (`indicators.setSession(controller.session)`, or
+let `@market-chart/ui` do it with the user's time-zone choice). Custom indicators get it as
+`create(params, context)` → `context.session`.
+
 Indicator outputs are ordinary series, so crosshair data, legends, scales and panes all work through the public
 chart API. Indicators can take another indicator's output as their source (for example, an SMA of the RSI).
 

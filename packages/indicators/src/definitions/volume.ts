@@ -97,7 +97,8 @@ export const vwap = defineIndicator({
   type: 'vwap',
   name: 'Volume Weighted Average Price',
   shortName: 'VWAP',
-  description: 'Resets at the start of each UTC day, week (Monday) or month.',
+  description:
+    'Resets at the start of each trading day, week (Monday) or month; UTC days without a session.',
   category: 'volume',
   placement: 'overlay',
   needsVolume: true,
@@ -113,21 +114,24 @@ export const vwap = defineIndicator({
   },
   outputs: vwapOutputs,
   fills: [{ from: 'upper', to: 'lower', color: 'rgba(38, 166, 154, 0.06)' }],
-  create: (p) =>
-    calc(
+  create: (p, context) => {
+    // Read from the closure: calculator state is deep-copied, a session must not be part of it.
+    const session = context?.session ?? null;
+    return calc(
       {
         state: new VwapState(),
         period: N,
       },
       (s, bar) => {
-        const key = periodKey(bar.time, p.anchor);
+        const key = periodKey(bar.time, p.anchor, session);
         if (key !== s.period) {
           s.period = key;
           s.state.reset();
         }
         return s.state.next(price(bar, p.source), volumeOf(bar), p.bandMultiplier);
       },
-    ),
+    );
+  },
 });
 
 export const anchoredVwap = defineIndicator({

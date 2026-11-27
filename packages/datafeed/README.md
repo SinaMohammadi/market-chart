@@ -78,8 +78,12 @@ The controller:
 - applies new bars, forming-bar updates and corrections of older bars with `series.update`;
 - loads older pages when the visible range comes within `loadMoreThreshold` bars (default 10) of the start,
   and stops at `historyStart` or after three empty pages;
-- can fill missing bars with flat candles (`fillGaps`, for 24/7 markets only) and feed a volume histogram
-  (`volumeSeries`);
+- can fill missing bars with flat candles (`fillGaps`) and feed a volume histogram (`volumeSeries`). With a
+  session (the symbol's `session` hours in its `timezone`, or the `session` option) only trading hours and
+  trading days are filled, so nights, weekends and holidays stay empty;
+- exposes that session as `controller.session` (`sessionChange` event); `datafeedSession(controller)` turns
+  it into a `ChartUi` capability. Intraday bars follow the UTC grid: hourly bars of a market that opens at
+  09:30 are at 10:00, 11:00 …, not 09:30, 10:30;
 - updates the forming bar in O(1), and with `maxBars` keeps memory bounded in long sessions (old bars are dropped
   while off-screen and reloaded when scrolled back to; `historyTrimmed` event).
 

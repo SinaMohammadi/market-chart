@@ -33,6 +33,11 @@ export const ar: Record<TranslationKey, Message> = {
   'direction.ltr': 'من اليسار إلى اليمين',
   'direction.rtl': 'من اليمين إلى اليسار',
   'numbers.localDigits': 'عرض الأسعار والتواريخ بالأرقام العربية',
+  'session.timeZone': 'المنطقة الزمنية لجلسة التداول',
+  'session.timeZone.exchange': 'البورصة',
+  'session.timeZone.chart': 'المنطقة الزمنية للرسم البياني',
+  'session.timeZone.local': 'هذا الحاسوب',
+  'session.timeZone.application': 'التطبيق',
 
   'menu.label': 'قائمة الرسم البياني',
   'menu.resetView': 'إعادة تعيين العرض',

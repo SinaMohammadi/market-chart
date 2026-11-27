@@ -3,11 +3,14 @@ import { resolveParams } from './params.js';
 import type {
   Bar,
   IndicatorCalculator,
+  IndicatorContext,
   IndicatorDefinition,
   InputSchema,
   Params,
 } from './types.js';
 import { IndicatorError } from './types.js';
+
+const NO_CONTEXT: IndicatorContext = { session: null };
 
 /** Columnar indicator output. Arrays may be longer than `length`; read [0, length). */
 export interface IndicatorResult {
@@ -45,10 +48,17 @@ export class IndicatorRunner<S extends InputSchema = InputSchema> {
   private values: Float64Array[];
   private barUp = new Uint8Array(64);
 
-  constructor(definition: IndicatorDefinition<S>, params?: Readonly<Record<string, unknown>>) {
+  readonly context: IndicatorContext;
+
+  constructor(
+    definition: IndicatorDefinition<S>,
+    params?: Readonly<Record<string, unknown>>,
+    context: IndicatorContext = NO_CONTEXT,
+  ) {
     this.definition = definition;
     this.params = resolveParams(definition, params);
-    this.calculator = definition.create(this.params);
+    this.context = context;
+    this.calculator = definition.create(this.params, context);
     this.values = definition.outputs.map(() => new Float64Array(64));
   }
 
@@ -65,7 +75,7 @@ export class IndicatorRunner<S extends InputSchema = InputSchema> {
   }
 
   reset(bars: readonly Bar[]): void {
-    this.calculator = this.definition.create(this.params);
+    this.calculator = this.definition.create(this.params, this.context);
     this.snapshots.fill(null);
     this.snapshotIndex.fill(-1);
     this._length = 0;
@@ -176,8 +186,9 @@ export function computeIndicator<S extends InputSchema>(
   definition: IndicatorDefinition<S>,
   bars: readonly Bar[],
   params?: Readonly<Record<string, unknown>>,
+  context?: IndicatorContext,
 ): IndicatorResult {
-  const runner = new IndicatorRunner(definition, params);
+  const runner = new IndicatorRunner(definition, params, context);
   runner.reset(bars);
   const { length, times, values, barUp } = runner.result();
   return {

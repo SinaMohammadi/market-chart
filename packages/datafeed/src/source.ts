@@ -1,4 +1,4 @@
-import type { ChartApi, SeriesApi, SeriesOptionsInput } from '@market-chart/core';
+import type { ChartApi, SeriesApi, SeriesOptionsInput, TradingSession } from '@market-chart/core';
 import { DatafeedController } from './controller.js';
 import type { DatafeedControllerOptions, DatafeedStatus } from './controller.js';
 import type { Datafeed, SymbolInfo, Timeframe } from './types.js';
@@ -134,4 +134,18 @@ export function datafeedSource(
   ): DatafeedAttachment;
 } {
   return { connect: (chart, request) => attachDatafeed(chart, datafeed, request, options) };
+}
+
+/**
+ * The controller's trading session as a `ChartUi` capability (`capabilities.session`), so the UI keeps the
+ * indicators' session and the user's session time zone in step with the symbol.
+ */
+export function datafeedSession(controller: DatafeedController): {
+  value(): TradingSession | null;
+  subscribe(listener: () => void): () => void;
+} {
+  return {
+    value: () => controller.session,
+    subscribe: (listener) => controller.on('sessionChange', () => listener()),
+  };
 }

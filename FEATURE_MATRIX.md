@@ -168,44 +168,46 @@ their workspace links exist; the same sources pass through the root `tsc` config
 
 ## Foundation
 
-| Feature                                                                                                                 | Status                                   | Tests                              | Package         |
-| ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------------------------------- | --------------- |
-| pnpm monorepo, tsup builds (ESM + CJS + d.ts), changesets, ESLint, Prettier                                             | Complete (configs; not yet executed)     | Pending                            | root            |
-| Columnar typed-array data store (append / replace / insert, validation)                                                 | Complete                                 | Passed                             | core            |
-| Shared timeline across series (incremental append, merge)                                                               | Complete                                 | Passed                             | core            |
-| Time scale: bar spacing, right offset, zoom around anchor, fit, logical/time ranges, edge locks                         | Complete                                 | Passed                             | core            |
-| Price scale: auto-scale, margins, invert, manual scale/pan                                                              | Complete                                 | Passed                             | core            |
-| Price scale modes: normal, logarithmic, percentage, indexed-to-100                                                      | Complete                                 | Passed                             | core            |
-| Price tick generation (nice steps, min-move aware)                                                                      | Complete                                 | Passed                             | core            |
-| Time tick generation (calendar-weighted, stable while scrolling)                                                        | Complete                                 | Passed                             | core            |
-| Time zones: UTC, local, IANA (DST-aware, cached offsets)                                                                | Complete                                 | Passed                             | core            |
-| Canvas 2D renderer: DPR-aware, two layers (main/overlay), frame scheduler, viewport culling                             | Complete                                 | Passed                             | core            |
-| Candlestick series                                                                                                      | Complete                                 | Passed                             | core            |
-| OHLC bar series                                                                                                         | Complete                                 | Passed                             | core            |
-| Line series (simple / step)                                                                                             | Complete                                 | Passed                             | core            |
-| Area series                                                                                                             | Complete                                 | Passed                             | core            |
-| Baseline series                                                                                                         | Complete                                 | Passed                             | core            |
-| Histogram series (per-point colours)                                                                                    | Complete                                 | Passed                             | core            |
-| Multiple series per pane, overlay price scales (e.g. volume)                                                            | Complete                                 | Passed                             | core            |
-| Multiple panes (stretch factors, auto-trim)                                                                             | Complete                                 | Passed                             | core            |
-| Crosshair: normal / magnet / hidden, axis labels, multi-series data                                                     | Complete                                 | Passed                             | core            |
-| Pan (drag), wheel zoom, trackpad pinch, touch pinch                                                                     | Complete                                 | Passed (drag); wheel/pinch: Manual | core            |
-| Axis drag scaling, axis double-click reset                                                                              | Complete                                 | Manual                             | core            |
-| Last-value labels and price lines                                                                                       | Complete (with label collision handling) | Passed                             | core            |
-| Typed event system (ready, resize, crosshairMove, click, visibleRangeChange, data/series/options/theme, error, destroy) | Complete                                 | Passed                             | core            |
-| Dark / light / custom themes                                                                                            | Complete                                 | Passed                             | core            |
-| Options validation, prototype-pollution-safe merging                                                                    | Complete                                 | Passed                             | core            |
-| Plugin lifecycle (ids, versions, dependencies, auto-cleanup, isolated failures)                                         | Complete                                 | Passed                             | core            |
-| Plugin pane render layers (below / above / top) with coordinate helpers                                                 | Complete                                 | Passed                             | core            |
-| DOM-free static geometry entry (`@market-chart/core/static`)                                                            | Complete                                 | Passed                             | core            |
-| `<Chart>`, `<Series>` and typed series components, refs                                                                 | Complete                                 | Passed                             | react           |
-| Incremental React data updates (append / last-bar replace → `update()`)                                                 | Complete                                 | Passed                             | react           |
-| `ChartProvider`, `useChart`, `useSeries`, `useChartEvent`, `useCrosshair`, `useChartState`                              | Complete                                 | Passed                             | react           |
-| `"use client"` interactive entry, SSR-safe mounting                                                                     | Complete                                 | Passed                             | react           |
-| `StaticChart` (line / area / candlestick SVG) via `@market-chart/react/ssr`                                             | Complete                                 | Passed                             | react           |
-| Synthetic datasets (crypto-, FX-, equity-, index-, gold- and silver-like) and tick simulator                            | Complete                                 | Passed                             | testing         |
-| Canvas mock for jsdom tests                                                                                             | Complete                                 | Passed                             | testing         |
-| Playground (8 working examples)                                                                                         | Complete                                 | Manual                             | apps/playground |
+| Feature                                                                                                                                              | Status                                   | Tests                              | Package         |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------------------------------- | --------------- |
+| pnpm monorepo, tsup builds (ESM + CJS + d.ts), changesets, ESLint, Prettier                                                                          | Complete (configs; not yet executed)     | Pending                            | root            |
+| Columnar typed-array data store (append / replace / insert, validation)                                                                              | Complete                                 | Passed                             | core            |
+| Shared timeline across series (incremental append, merge)                                                                                            | Complete                                 | Passed                             | core            |
+| Time scale: bar spacing, right offset, zoom around anchor, fit, logical/time ranges, edge locks                                                      | Complete                                 | Passed                             | core            |
+| Price scale: auto-scale, margins, invert, manual scale/pan                                                                                           | Complete                                 | Passed                             | core            |
+| Price scale modes: normal, logarithmic, percentage, indexed-to-100                                                                                   | Complete                                 | Passed                             | core            |
+| Price tick generation (nice steps, min-move aware)                                                                                                   | Complete                                 | Passed                             | core            |
+| Time tick generation (calendar-weighted, stable while scrolling)                                                                                     | Complete                                 | Passed                             | core            |
+| Time zones: UTC, local, IANA (DST-aware, cached offsets)                                                                                             | Complete                                 | Passed                             | core            |
+| Trading sessions: exchange hours in the exchange time zone (DST), overnight sessions, lunch breaks, holidays, special hours; re-read in another zone | Complete                                 | Passed                             | core            |
+| Session time zone choice: exchange, chart, this computer or application (UI setting, applied to indicators)                                          | Complete                                 | Passed (unit, jsdom)               | ui, core        |
+| Canvas 2D renderer: DPR-aware, two layers (main/overlay), frame scheduler, viewport culling                                                          | Complete                                 | Passed                             | core            |
+| Candlestick series                                                                                                                                   | Complete                                 | Passed                             | core            |
+| OHLC bar series                                                                                                                                      | Complete                                 | Passed                             | core            |
+| Line series (simple / step)                                                                                                                          | Complete                                 | Passed                             | core            |
+| Area series                                                                                                                                          | Complete                                 | Passed                             | core            |
+| Baseline series                                                                                                                                      | Complete                                 | Passed                             | core            |
+| Histogram series (per-point colours)                                                                                                                 | Complete                                 | Passed                             | core            |
+| Multiple series per pane, overlay price scales (e.g. volume)                                                                                         | Complete                                 | Passed                             | core            |
+| Multiple panes (stretch factors, auto-trim)                                                                                                          | Complete                                 | Passed                             | core            |
+| Crosshair: normal / magnet / hidden, axis labels, multi-series data                                                                                  | Complete                                 | Passed                             | core            |
+| Pan (drag), wheel zoom, trackpad pinch, touch pinch                                                                                                  | Complete                                 | Passed (drag); wheel/pinch: Manual | core            |
+| Axis drag scaling, axis double-click reset                                                                                                           | Complete                                 | Manual                             | core            |
+| Last-value labels and price lines                                                                                                                    | Complete (with label collision handling) | Passed                             | core            |
+| Typed event system (ready, resize, crosshairMove, click, visibleRangeChange, data/series/options/theme, error, destroy)                              | Complete                                 | Passed                             | core            |
+| Dark / light / custom themes                                                                                                                         | Complete                                 | Passed                             | core            |
+| Options validation, prototype-pollution-safe merging                                                                                                 | Complete                                 | Passed                             | core            |
+| Plugin lifecycle (ids, versions, dependencies, auto-cleanup, isolated failures)                                                                      | Complete                                 | Passed                             | core            |
+| Plugin pane render layers (below / above / top) with coordinate helpers                                                                              | Complete                                 | Passed                             | core            |
+| DOM-free static geometry entry (`@market-chart/core/static`)                                                                                         | Complete                                 | Passed                             | core            |
+| `<Chart>`, `<Series>` and typed series components, refs                                                                                              | Complete                                 | Passed                             | react           |
+| Incremental React data updates (append / last-bar replace → `update()`)                                                                              | Complete                                 | Passed                             | react           |
+| `ChartProvider`, `useChart`, `useSeries`, `useChartEvent`, `useCrosshair`, `useChartState`                                                           | Complete                                 | Passed                             | react           |
+| `"use client"` interactive entry, SSR-safe mounting                                                                                                  | Complete                                 | Passed                             | react           |
+| `StaticChart` (line / area / candlestick SVG) via `@market-chart/react/ssr`                                                                          | Complete                                 | Passed                             | react           |
+| Synthetic datasets (crypto-, FX-, equity-, index-, gold- and silver-like) and tick simulator                                                         | Complete                                 | Passed                             | testing         |
+| Canvas mock for jsdom tests                                                                                                                          | Complete                                 | Passed                             | testing         |
+| Playground (8 working examples)                                                                                                                      | Complete                                 | Manual                             | apps/playground |
 
 ## Professional chart engine
 
@@ -471,10 +473,15 @@ their workspace links exist; the same sources pass through the root `tsc` config
 ## Known limitations
 
 - The time axis is index-based: gaps (weekends, missing candles) are not shown as empty space.
-- Session-based indicators (VWAP, pivots, CPR) use UTC boundaries; exchange sessions and time zones are not yet supported.
+- Session-based indicators (VWAP, pivots, CPR) use UTC days unless a trading session is set
+  (`indicators.setSession`, or the UI with a `session` capability); then they use trading days, and
+  pre-market and after-hours bars join the session they lead into. Measured with the built packages in Node: VWAP over 1M one-minute
+  bars takes 32 ms with a New York session and 29 ms without (the session remembers the current open or
+  closed interval, so bars in time order rarely need time-zone arithmetic).
 - Ichimoku future points use the last bar interval; with irregular data the projected times are approximations until real bars arrive.
 - Renko, Kagi, Point & Figure and Line Break place each element at the time of the bar that formed it (+1 ms for several per bar); their time axis shows bar times, not a regular calendar.
-- Volume/market profiles use UTC sessions; with OHLCV bars, volume is spread evenly over each bar's range.
+- Volume/market profiles use UTC days unless given a `session`; with OHLCV bars, volume is spread evenly over
+  each bar's range.
 - Drawing tools: the core package stays headless; `@market-chart/ui` provides the property dialog, a text editing dialog and the long-press menu.
 - Pane indices are compacted: removing a series from a middle pane that becomes empty moves the panes below it up.
 - `fitContent()` is limited by `timeScale.minBarSpacing` (default 0.5 px). Visible bars are capped at about
@@ -486,7 +493,9 @@ their workspace links exist; the same sources pass through the root `tsc` config
 - Kinetic scrolling and the touch crosshair were verified with unit tests and synthetic events, not yet on a physical touch device.
 - The datafeed controller drops old bars only when `maxBars` is set; without it, very long sessions keep growing.
 - Replacing 1M bars with several indicators attached takes 1.5–2 s, mostly garbage collection; prefer `update()` and history paging.
-- `fillGaps` fills by calendar; it does not know exchange holidays or sessions, so use it for 24/7 markets only.
+- `fillGaps` fills only trading hours and trading days when the symbol has a session (or `session` is
+  given); without one it fills every missing time. Intraday bars follow the UTC grid, so hourly bars of a
+  market that opens at 09:30 are at 10:00, 11:00 … (session-aligned bars are not supported yet).
 - The SSE adapter is tested with an `EventSource` stand-in, not against a live server.
 - Persistence stores the visible range by time; if the restored chart has different data around that range, the nearest bars are shown.
 - Only the Canvas 2D backend exists. No WebGL backend exists yet, and none will be added unless benchmarks justify it.

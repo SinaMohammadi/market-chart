@@ -1,5 +1,11 @@
-import { EventEmitter } from '@market-chart/core';
-import type { ChartApi, SeriesApi, SeriesType, Unsubscribe } from '@market-chart/core';
+import { EventEmitter, createTradingSession } from '@market-chart/core';
+import type {
+  ChartApi,
+  SeriesApi,
+  SeriesType,
+  TradingSession,
+  Unsubscribe,
+} from '@market-chart/core';
 import { fillMissingCandles, mergeCandles, normalizeCandles } from './candles.js';
 import { alignTime, parseTimeframe } from './timeframe.js';
 import type { Candle, Datafeed, SymbolInfo, Timeframe } from './types.js';
@@ -17,8 +23,17 @@ export interface DatafeedControllerOptions {
   readonly chunkBars?: number;
   /** Load more history when fewer than this many bars are left of the visible range (default 10). */
   readonly loadMoreThreshold?: number;
-  /** Fill missing bars with flat candles (continuous markets only). */
+  /**
+   * Fill missing bars with flat candles. With a session (from the symbol or `session`), only times in
+   * trading hours are filled (intraday) and only trading days (daily bars): no bars for nights, weekends and
+   * holidays.
+   */
   readonly fillGaps?: boolean;
+  /**
+   * Trading session for gap filling and `session` (read by indicators and profiles). Default: built from the
+   * symbol's `session` and `timezone`; null ignores them (continuous).
+   */
+  readonly session?: TradingSession | null;
   /** Also feed volume into this histogram series. */
   readonly volumeSeries?: SeriesApi<'histogram'> | null;
   readonly volumeColors?: { readonly up: string; readonly down: string };
@@ -35,6 +50,8 @@ export interface DatafeedControllerOptions {
 export interface DatafeedControllerEvents {
   status: { readonly status: DatafeedStatus };
   symbolResolved: { readonly info: SymbolInfo };
+  /** The trading session changed (a new symbol); null when the market is continuous or unknown. */
+  sessionChange: { readonly session: TradingSession | null };
   historyLoaded: { readonly bars: number; readonly older: boolean };
   realtime: { readonly candle: Candle };
   /** Old bars were dropped to respect `maxBars`. */
@@ -122,6 +139,7 @@ export class DatafeedController {
   private candles: Candle[] = [];
   private _status: DatafeedStatus = 'idle';
   private _info: SymbolInfo | null = null;
+  private _session: TradingSession | null = null;
   private generation = 0;
   private unsubscribe: Unsubscribe | null = null;
   private readonly offRange: Unsubscribe;
@@ -157,6 +175,31 @@ export class DatafeedController {
 
   get symbol(): string {
     return this.options.symbol;
+  }
+
+  /**
+   * The exchange session of the current symbol (hours in the exchange's time zone), or null. Pass it to
+   * `IndicatorManager.setSession` and profile options; `session.withTimeZone(zone)` re-reads it elsewhere.
+   */
+  get session(): TradingSession | null {
+    return this._session;
+  }
+
+  private updateSession(info: SymbolInfo): void {
+    let next: TradingSession | null = null;
+    if (this.options.session !== undefined) next = this.options.session;
+    else if (info.session) {
+      try {
+        next = createTradingSession({ hours: info.session, timeZone: info.timezone ?? 'UTC' });
+      } catch (error) {
+        // A bad session from the provider must not stop loading: report it and treat the market as continuous.
+        this.emitter.emit('error', { error });
+      }
+    }
+    if (next && next.continuous) next = null;
+    if (next === this._session) return;
+    this._session = next;
+    this.emitter.emit('sessionChange', { session: next });
   }
 
   get interval(): Timeframe {
@@ -278,6 +321,7 @@ export class DatafeedController {
       if (generation !== this.generation || this.stopIfChartGone()) return;
       this._info = info;
       this.emitter.emit('symbolResolved', { info });
+      this.updateSession(info);
       if (this.options.applySymbolFormat !== false && info.pricePrecision !== undefined) {
         const precision = info.pricePrecision;
         this.series.applyOptions({
@@ -325,7 +369,12 @@ export class DatafeedController {
     const last = this.candles[this.candles.length - 1];
     if (!last || candle.time > last.time) {
       if (this.options.fillGaps && last) {
-        const filled = fillMissingCandles([last, candle], this.options.interval).slice(1, -1);
+        const filled = fillMissingCandles(
+          [last, candle],
+          this.options.interval,
+          undefined,
+          this._session,
+        ).slice(1, -1);
         for (const gap of filled) this.appendOrUpdate(gap);
       }
       this.appendOrUpdate(candle);
@@ -374,7 +423,7 @@ export class DatafeedController {
 
   private push(initial = false): void {
     const candles = this.options.fillGaps
-      ? fillMissingCandles(this.candles, this.options.interval)
+      ? fillMissingCandles(this.candles, this.options.interval, undefined, this._session)
       : this.candles;
     if (this.options.fillGaps) this.candles = candles;
     this.series.setData(candles.map((c) => this.toPoint(c)) as never);

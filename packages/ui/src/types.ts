@@ -5,6 +5,8 @@ import type {
   SeriesApi,
   SeriesData,
   SeriesType,
+  TradingSession,
+  Unsubscribe,
 } from '@market-chart/core';
 import type { AnyTranslationKey, I18n, TranslationValues } from '@market-chart/i18n';
 import type { Drawing, DrawingManager } from '@market-chart/drawing-tools';
@@ -74,8 +76,23 @@ export interface Choice {
  * Features the application provides. Actions that need a capability (`requires`) are hidden when it is
  * missing, so a menu never offers something that cannot work.
  */
+/**
+ * The current symbol's trading session, e.g. `datafeedSession(controller)` from `@market-chart/datafeed`.
+ * `subscribe` reports changes (a new symbol).
+ */
+export interface SessionCapability {
+  value(): TradingSession | null;
+  subscribe?(listener: () => void): Unsubscribe;
+}
+
 export interface ChartUiCapabilities {
+  /**
+   * Indicators. With a `session` capability or a session time-zone preference other than `exchange`, the
+   * UI keeps `indicators.setSession` in step with `ui.session()`.
+   */
   readonly indicators?: IndicatorManager;
+  /** The symbol's exchange session (see `SessionCapability`). */
+  readonly session?: SessionCapability;
   readonly drawings?: DrawingManager;
   /** Interval switching (e.g. a `DatafeedController`). */
   readonly timeframe?: {

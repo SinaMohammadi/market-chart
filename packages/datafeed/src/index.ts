@@ -58,5 +58,5 @@ export type {
 } from './controller.js';
 export { createSyntheticDatafeed } from './synthetic.js';
 export type { SyntheticDatafeed, SyntheticDatafeedOptions, SyntheticSymbol } from './synthetic.js';
-export { attachDatafeed, datafeedSource } from './source.js';
+export { attachDatafeed, datafeedSession, datafeedSource } from './source.js';
 export type { DatafeedAttachment, DatafeedSeriesOptions, DatafeedState } from './source.js';

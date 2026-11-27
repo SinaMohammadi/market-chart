@@ -1,4 +1,5 @@
 import { alignTime, nextBarTime, parseTimeframe } from './timeframe.js';
+import type { TradingSession } from '@market-chart/core';
 import type { Candle, Timeframe } from './types.js';
 import { DatafeedError } from './types.js';
 
@@ -148,25 +149,43 @@ export function resampleCandles(candles: readonly Candle[], timeframe: Timeframe
   return out;
 }
 
+const DAY_MS = 86_400_000;
+/** Closed times are stepped over without filling; this bounds the work for very long gaps. */
+const MAX_FILL_STEPS = 1_000_000;
+
 /**
  * Inserts flat candles (open = high = low = close = previous close, volume 0) for missing bars between
- * existing ones. Only use it for markets that trade continuously, otherwise closed sessions get filled.
+ * existing ones. Without a session every missing time is filled (continuous markets); with one, only
+ * trading hours (intraday) or trading days (daily bars), so nights, weekends and holidays stay empty.
  */
 export function fillMissingCandles(
   candles: readonly Candle[],
   timeframe: Timeframe,
   maxFill = 10_000,
+  session: TradingSession | null = null,
 ): Candle[] {
   const out: Candle[] = [];
   let filled = 0;
+  // With a session: intraday bars only in trading hours, daily bars only on trading days.
+  const unit = session ? parseTimeframe(timeframe).unit : null;
+  const tradable = !session
+    ? null
+    : unit === 'D'
+      ? (t: number) => session.isTradingDay(Math.floor(t / DAY_MS))
+      : unit === 'W' || unit === 'M'
+        ? null
+        : (t: number) => session.isOpen(t);
+  let steps = 0;
   for (const c of candles) {
     const prev = out[out.length - 1];
     if (prev) {
       for (
         let t = nextBarTime(prev.time, timeframe);
-        t < c.time && filled < maxFill;
+        t < c.time && filled < maxFill && steps < MAX_FILL_STEPS;
         t = nextBarTime(t, timeframe)
       ) {
+        steps++;
+        if (tradable && !tradable(t)) continue;
         out.push({
           time: t,
           open: prev.close,

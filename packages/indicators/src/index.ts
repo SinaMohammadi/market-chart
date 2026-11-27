@@ -10,6 +10,7 @@ export type {
   FillSpec,
   HistogramColorMode,
   IndicatorCalculator,
+  IndicatorContext,
   IndicatorCategory,
   IndicatorDefinition,
   InputSchema,

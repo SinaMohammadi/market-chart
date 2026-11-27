@@ -28,6 +28,7 @@ bar that formed it, plus 1 ms when one bar forms several, so times stay strictly
 ```ts
 addVolumeProfile(chart, candles, { mode: 'visible', rows: 48 }); // follows scrolling/zooming
 addVolumeProfile(chart, candles, { mode: 'session', rows: 24 }); // one per UTC day
+addVolumeProfile(chart, candles, { mode: 'session', session: nyse }); // one per trading day
 addVolumeProfile(chart, candles, { mode: 'fixed', from: t0, to: t1, trades }); // exact buy/sell split from trades
 addMarketProfile(chart, candles, { periodMinutes: 30 }); // TPO letters, POC, value area, initial balance
 ```
@@ -68,7 +69,8 @@ acts as the envelope that drives the time axis, auto-scaling and crosshair value
 
 ## Limitations
 
-- Market profile and session profiles use UTC days; exchange session calendars come with the datafeed work.
+- Without a `session`, market and session profiles use UTC days. With one, the market profile counts its
+  periods from the session's open and leaves out bars outside trading hours.
 - Fixed-range volume profiles are set by API (`from` / `to`), not yet drawn interactively as a drawing tool.
 - Realtime: helpers recompute from the full input on each `setData` call (O(n)).
 - Synthetic trades and order books in `@market-chart/testing` are for demos and tests only.
